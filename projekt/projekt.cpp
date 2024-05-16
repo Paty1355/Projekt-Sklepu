@@ -31,7 +31,6 @@ public:
         char* zErrMsg = 0;
         int rc;
         string table_sql, insert_sql;
-        static int licz = 1;
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -53,12 +52,9 @@ public:
         insert_sql = "INSERT OR IGNORE INTO categories (categoryName) VALUES ('" + categoryName + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
-        licz++;
-
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
-            licz--;
         }
         sqlite3_close(db);
     }
@@ -68,7 +64,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string remove_sql, select_sql;
-        const char* data = "Callback function called"; 
+        const char* data = "Callback function called"; //zastanow sie nad tym
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -97,12 +93,83 @@ public:
 class Product : public Category {
     int price;
     string productName;
-
 public:
     Product(int price, string nameP, string nameC) :
         price(price), productName(nameP), Category(nameC) {}
 
-    // Implement add and remove methods for Product
+    virtual void add() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, insert_sql;
+        const char* data = "Callback function called";
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        table_sql = "CREATE TABLE IF NOT EXISTS products("
+            "id INTEGER PRIMARY KEY,"
+            "productName TEXT NOT NULL UNIQUE,"
+            "price INTEGER,"
+            "productCategory TEXT,"
+            "FOREIGN KEY(productCategory) REFERENCES categories(categoryName))";
+
+        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        insert_sql = "INSERT OR IGNORE INTO products (productName, price, productCategory) VALUES ('" + productName + "' ," + to_string(price) +", '" + categoryName + "');";
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        /* Create SQL statement */
+        string select_sql = "SELECT * from products";
+
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+
+        sqlite3_close(db);
+    }
+
+    virtual void remove() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string remove_sql, select_sql;
+        const char* data = "Callback function called"; //zastanow sie nad tym
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        remove_sql = "DELETE FROM products "
+            "WHERE productName='" + productName + "' ";
+
+        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        /* Create SQL statement */
+        select_sql = "SELECT * from products";
+
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+        sqlite3_close(db);
+    }
 };
 
 int main(int argc, char* argv[]) {
@@ -110,5 +177,8 @@ int main(int argc, char* argv[]) {
     zywnosc.add();
     Category zywnosc2("truskawka");
     zywnosc2.remove();
+    Product produkt1(2, "Truskawka", "banan");
+    produkt1.add();
+    produkt1.remove();
     return 0;
 }
