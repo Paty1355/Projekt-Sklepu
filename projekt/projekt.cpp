@@ -17,6 +17,8 @@ class Abstract {
 public:
     virtual void add() = 0;
     virtual void remove() = 0;
+
+    virtual void search() = 0;
 };
 
 class Category :public Abstract {
@@ -172,7 +174,65 @@ public:
     }
 };
 
+
+
+
+class Warehouse: public Abstract {
+protected:
+    int quantity;
+public:
+    Warehouse(int num) :
+        quantity(num) {}
+
+    virtual void search() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, search_sql;
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        table_sql = "CREATE TABLE IF NOT EXISTS warehouse("
+            "id INTEGER PRIMARY KEY,"
+            "productName TEXT NOT NULL UNIQUE,"
+            "price INT,"
+            "quantity INT,"
+            "productCategory TEXT,"
+            "FOREIGN KEY (productCategory) REFERENCES categories(categoryName);";
+
+
+        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        search_sql = "SELECT quantity FROM warehouse WHERE productName = '"searched_item"'";
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
+
+
+
+    friend class Product;
+};
+
 int main(int argc, char* argv[]) {
+    string searched_item;
+    Warehouse warehouse();
+
+
+    std::cout << "123" "asbgdjkhas" "123";
     Category zywnosc("banan");
     zywnosc.add();
     Category zywnosc2("truskawka");
