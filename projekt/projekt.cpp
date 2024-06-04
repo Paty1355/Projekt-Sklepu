@@ -399,8 +399,16 @@ class Client :public Abstract {
     int clientId, cartId;
     string clientLogin, clientPassword;
 public:
+    Client();
     Client(int idClient, int idCart, string login, string password) :
         clientId(idClient),cartId(idCart), clientLogin(login), clientPassword(password){}
+
+    void setValue(int idClient, int idCart, string login, string password) {
+        clientId = idClient;
+        cartId = idCart;
+        clientLogin = login;
+        clientPassword = password;
+    }
 
     virtual void add() override {
         sqlite3* db;
@@ -486,6 +494,7 @@ public:
 };
 
 int main(int argc, char* argv[]) {
+    static int count_person = 1;
     string searched_item;
     Warehouse warehouse();
 
@@ -502,6 +511,8 @@ int main(int argc, char* argv[]) {
 
     int choice;
     string password, login;
+    Client* clients = new Client[200];
+
     cout << "-------------------MENU---------------------" << endl;
     cout << "1. Admin" << endl;
     cout << "2. User" << endl;
@@ -527,7 +538,6 @@ int main(int argc, char* argv[]) {
             }
             //dodawanie
             //dodawanie produktów do magazynu
-
         }
     }
     else {
@@ -535,11 +545,10 @@ int main(int argc, char* argv[]) {
         cin >> login;
         cout << "User password: " << endl;
         cin >> password;
-        Client klient1(1, 1, login, password);
-        klient1.add();
+       // Client klient[count_person];
+        klient[count_person].setValue(1, 1, login, password);
+        klient[count_person].add();
         //wyswietlenie produktów z magazynu
-
-
     }
     
 
