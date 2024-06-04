@@ -92,12 +92,102 @@ public:
     }
 };
 
-class Product : public Category {
+//class Product : public Category {
+//    int price;
+//    string productName;
+//public:
+//    Product(int price, string nameP, string nameC) :
+//        price(price), productName(nameP), Category(nameC) {}
+//
+//    virtual void add() override {
+//        sqlite3* db;
+//        char* zErrMsg = 0;
+//        int rc;
+//        string table_sql, insert_sql;
+//        const char* data = "Callback function called";
+//
+//        /* Open database */
+//        rc = sqlite3_open("shop.db", &db);
+//
+//        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+//
+//        /* Creating Tables*/
+//        table_sql = "CREATE TABLE IF NOT EXISTS products("
+//            "id INTEGER PRIMARY KEY,"
+//            "productName TEXT NOT NULL UNIQUE,"
+//            "price INTEGER,"
+//            "productCategory TEXT,"
+//            "FOREIGN KEY(productCategory) REFERENCES categories(categoryName))";
+//
+//        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+//
+//        if (rc != SQLITE_OK) {
+//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+//            sqlite3_free(zErrMsg);
+//        }
+//
+//        insert_sql = "INSERT OR IGNORE INTO products (productName, price, productCategory) VALUES ('" + productName + "' ," + to_string(price) +", '" + categoryName + "');";
+//        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+//
+//        if (rc != SQLITE_OK) {
+//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+//            sqlite3_free(zErrMsg);
+//        }
+//
+//        /* Create SQL statement */
+//        string select_sql = "SELECT * from products";
+//
+//        /* Execute SQL statement */
+//        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+//
+//        sqlite3_close(db);
+//    }
+//
+//    virtual void remove() override {
+//        sqlite3* db;
+//        char* zErrMsg = 0;
+//        int rc;
+//        string remove_sql, select_sql;
+//        const char* data = "Callback function called"; //zastanow sie nad tym
+//
+//        /* Open database */
+//        rc = sqlite3_open("shop.db", &db);
+//
+//        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+//
+//        /* Creating Tables*/
+//        remove_sql = "DELETE FROM products "
+//            "WHERE productName='" + productName + "' ";
+//
+//        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+//
+//        if (rc != SQLITE_OK) {
+//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+//            sqlite3_free(zErrMsg);
+//        }
+//        /* Create SQL statement */
+//        select_sql = "SELECT * from products";
+//
+//        /* Execute SQL statement */
+//        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+//        sqlite3_close(db);
+//    }
+//};
+
+
+
+
+
+
+class Warehouse: public Category {
+protected:
     int price;
+    int quantity;
     string productName;
 public:
-    Product(int price, string nameP, string nameC) :
-        price(price), productName(nameP), Category(nameC) {}
+    Warehouse(int priceP, int quantityP, string nameP, string nameC) :
+        price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
+
 
     virtual void add() override {
         sqlite3* db;
@@ -112,12 +202,13 @@ public:
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
         /* Creating Tables*/
-        table_sql = "CREATE TABLE IF NOT EXISTS products("
+        table_sql = "CREATE TABLE IF NOT EXISTS warehouse("
             "id INTEGER PRIMARY KEY,"
             "productName TEXT NOT NULL UNIQUE,"
-            "price INTEGER,"
+            "price INT,"
+            "quantity INT,"
             "productCategory TEXT,"
-            "FOREIGN KEY(productCategory) REFERENCES categories(categoryName))";
+            "FOREIGN KEY (productCategory) REFERENCES categories(categoryName);";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -126,7 +217,7 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO products (productName, price, productCategory) VALUES ('" + productName + "' ," + to_string(price) +", '" + categoryName + "');";
+        insert_sql = "INSERT OR IGNORE INTO warehouse (productName, price, productCategory, quantity) VALUES ('" + productName + "' ," + to_string(price) + ", '" + categoryName + "' ," + to_string(quantity) + ");";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -135,7 +226,7 @@ public:
         }
 
         /* Create SQL statement */
-        string select_sql = "SELECT * from products";
+        string select_sql = "SELECT * FROM warehouse";
 
         /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
@@ -156,7 +247,7 @@ public:
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
         /* Creating Tables*/
-        remove_sql = "DELETE FROM products "
+        remove_sql = "DELETE FROM warehouse "
             "WHERE productName='" + productName + "' ";
 
         rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
@@ -166,23 +257,12 @@ public:
             sqlite3_free(zErrMsg);
         }
         /* Create SQL statement */
-        select_sql = "SELECT * from products";
+        select_sql = "SELECT * FROM warehouse";
 
         /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
         sqlite3_close(db);
     }
-};
-
-
-
-
-class Warehouse: public Abstract {
-protected:
-    int quantity;
-public:
-    Warehouse(int num) :
-        quantity(num) {}
 
     virtual void search() override {
         sqlite3* db;
@@ -195,25 +275,8 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        /* Creating Tables*/
-        table_sql = "CREATE TABLE IF NOT EXISTS warehouse("
-            "id INTEGER PRIMARY KEY,"
-            "productName TEXT NOT NULL UNIQUE,"
-            "price INT,"
-            "quantity INT,"
-            "productCategory TEXT,"
-            "FOREIGN KEY (productCategory) REFERENCES categories(categoryName);";
-
-
-        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-        }
-
-        search_sql = "SELECT quantity FROM warehouse WHERE productName = '"searched_item"'";
-        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+        search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
+        rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -222,9 +285,6 @@ public:
         sqlite3_close(db);
     }
 
-
-
-    friend class Product;
 };
 
 int main(int argc, char* argv[]) {
