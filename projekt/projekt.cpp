@@ -180,6 +180,7 @@ public:
 
 
 class Warehouse: public Category {
+    friend class Cart;
 protected:
     int price;
     int quantity;
@@ -187,7 +188,6 @@ protected:
 public:
     Warehouse(int priceP, int quantityP, string nameP, string nameC) :
         price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
-
 
     virtual void add() override {
         sqlite3* db;
@@ -275,7 +275,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
+       // search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -286,19 +286,128 @@ public:
     }
 
 };
+class Cart :public Abstract {
+    int cartId;
+    int idProduct;
+public:
+    Cart(int id, int product) :
+        cartId(id), idProduct(product) {}
+
+    virtual void add() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, insert_sql;
+        const char* data = "Callback function called";
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        table_sql = "CREATE TABLE IF NOT EXISTS cart("
+            "id INTEGER PRIMARY KEY,"
+            "idProduct INTEGER,"
+            "FOREIGN KEY (idProduct) REFERENCES warehouse(id));";
+
+        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        insert_sql = "INSERT OR IGNORE INTO cart (idProduct) VALUES ('" + to_string(idProduct) + "');";
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        /* Create SQL statement */
+        string select_sql = "SELECT * FROM cart";
+
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+
+        sqlite3_close(db);
+    }
+    virtual void remove() override {}
+    virtual void search() override {}
+};
+
+class Client :public Abstract {
+    int clientId, cartId;
+    string clientLogin, clientPassword;
+public:
+    Client(int idClient, int idCart, string login, string password) :
+        clientId(idClient),cartId(idCart), clientLogin(login), clientPassword(password){}
+
+    virtual void add() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, insert_sql;
+        const char* data = "Callback function called";
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        table_sql = "CREATE TABLE IF NOT EXISTS client("
+            "id INTEGER PRIMARY KEY,"
+            "clientLogin TEXT NOT NULL UNIQUE,"
+            "clientPassword TEXT NOT NULL,"
+            "idCart INTEGER UNIQUE,"
+            "FOREIGN KEY (idCart) REFERENCES cart(id));"; 
+
+        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('"+to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cartId)+ "');";
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+
+        /* Create SQL statement */
+        string select_sql = "SELECT * FROM client";
+
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+
+        sqlite3_close(db);
+    }
+    virtual void remove() override {}
+    virtual void search() override {}
+};
 
 int main(int argc, char* argv[]) {
     string searched_item;
     Warehouse warehouse();
 
+    Client klient1(1,1,"klient1", "haslo1");
+    klient1.add();
 
-    std::cout << "123" "asbgdjkhas" "123";
-    Category zywnosc("banan");
-    zywnosc.add();
-    Category zywnosc2("truskawka");
-    zywnosc2.remove();
-    Product produkt1(2, "Truskawka", "banan");
-    produkt1.add();
-    produkt1.remove();
+    Cart koszyk1(1,1);
+    koszyk1.add();
+
+    //Category zywnosc("banan");
+   // zywnosc.add();
+   // Category zywnosc2("truskawka");
+   // zywnosc2.remove();
+   // Product produkt1(2, "Truskawka", "banan");
+  //  produkt1.add();
+   // produkt1.remove();
     return 0;
 }
