@@ -489,9 +489,6 @@ int main(int argc, char* argv[]) {
     string searched_item;
     Warehouse warehouse();
 
-    Client klient1(1,1,"klient1", "haslo1");
-    klient1.add();
-
     Cart koszyk1(1,1);
     koszyk1.add();
 
@@ -502,5 +499,50 @@ int main(int argc, char* argv[]) {
    // Product produkt1(2, "Truskawka", "banan");
   //  produkt1.add();
    // produkt1.remove();
+
+    int choice;
+    string password, login;
+    cout << "-------------------MENU---------------------" << endl;
+    cout << "1. Admin" << endl;
+    cout << "2. User" << endl;
+    cin >> choice;
+    while (choice != 1 && choice != 2) {
+        cout << "Choose 1 or 2" << endl;
+        cin >> choice;
+    }
+    if (choice == 1) {
+        cout << "Admin password: " << endl;
+        cin >> password;
+        if (password == "admin") {
+            choice = 0;
+            cout << "Login successfully" << endl;
+            cout << "1. Add category" << endl;
+            cout << "2. Add product to warehouse" << endl;
+            cout << "3. Menu" << endl;
+            while (choice != 1 && choice != 2 && choice != 3) {
+                cout << "Choose 1 or 2 or 3" << endl;
+                cin >> choice;
+            }
+            switch (choice) {
+            }
+            //dodawanie
+            //dodawanie produktów do magazynu
+
+        }
+    }
+    else {
+        cout << "User login: " << endl;
+        cin >> login;
+        cout << "User password: " << endl;
+        cin >> password;
+        Client klient1(1, 1, login, password);
+        klient1.add();
+        //wyswietlenie produktów z magazynu
+
+
+    }
+    
+
+
     return 0;
 }
