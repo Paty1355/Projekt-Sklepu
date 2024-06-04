@@ -17,7 +17,6 @@ class Abstract {
 public:
     virtual void add() = 0;
     virtual void remove() = 0;
-
     virtual void search() = 0;
 };
 
@@ -325,17 +324,53 @@ public:
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
-
-        /* Create SQL statement */
-        string select_sql = "SELECT * FROM cart";
-
-        /* Execute SQL statement */
-        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
-
         sqlite3_close(db);
     }
-    virtual void remove() override {}
-    virtual void search() override {}
+    virtual void remove() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string remove_sql, select_sql;
+        const char* data = "Callback function called"; 
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        remove_sql = "DELETE FROM cart "
+            "WHERE id='" + to_string(cartId) + "' ";
+
+        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
+
+    virtual void search() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, search_sql;
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        search_sql = "SELECT * FROM cart";
+        rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
 };
 
 class Client :public Abstract {
@@ -379,17 +414,53 @@ public:
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
-
-        /* Create SQL statement */
-        string select_sql = "SELECT * FROM client";
-
-        /* Execute SQL statement */
-        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
-
         sqlite3_close(db);
     }
-    virtual void remove() override {}
-    virtual void search() override {}
+    virtual void remove() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string remove_sql, select_sql;
+        const char* data = "Callback function called";
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        remove_sql = "DELETE FROM client "
+            "WHERE id='" + to_string(clientId) + "' ";
+
+        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
+
+    virtual void search() override {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, search_sql;
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        search_sql = "SELECT * FROM client";
+        rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
 };
 
 int main(int argc, char* argv[]) {
