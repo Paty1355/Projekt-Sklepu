@@ -362,7 +362,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT * FROM cart";
+        search_sql = "SELECT * FROM warehouse";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -371,6 +371,28 @@ public:
         }
         sqlite3_close(db);
     }
+    void buy(Warehouse& object) {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string sql;
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        sql = "UPDATE warehouse set quantity = " + to_string(object.quantity-1) + " where ID="+to_string(idProduct)+"; " \
+            "SELECT * from COMPANY";
+        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
+
 };
 
 class Client :public Abstract {
