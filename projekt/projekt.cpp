@@ -18,6 +18,7 @@ public:
     virtual void add() = 0;
     virtual void remove() = 0;
     virtual void search() = 0;
+    //virtual void search1(string searched_item) = 0;
 };
 
 class Category :public Abstract {
@@ -82,13 +83,15 @@ public:
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
-        /* Create SQL statement */               
+        /* Create SQL statement */
         select_sql = "SELECT * from categories";
 
         /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
         sqlite3_close(db);
     }
+
+    virtual void search() override {}
 };
 
 //class Product : public Category {
@@ -178,7 +181,7 @@ public:
 
 
 
-class Warehouse: public Category {
+class Warehouse : public Category {
     friend class Cart;
 protected:
     int price;
@@ -207,7 +210,7 @@ public:
             "price INT,"
             "quantity INT,"
             "productCategory TEXT,"
-            "FOREIGN KEY (productCategory) REFERENCES categories(categoryName);";
+            "FOREIGN KEY (productCategory) REFERENCES categories(categoryName));";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -274,7 +277,28 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-       // search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
+        search_sql = "SELECT * FROM warehouse";
+        rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+    }
+
+    void checkQuantity(string searched_item) {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string table_sql, search_sql;
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -331,7 +355,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string remove_sql, select_sql;
-        const char* data = "Callback function called"; 
+        const char* data = "Callback function called";
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -382,7 +406,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        sql = "UPDATE warehouse set quantity = " + to_string(object.quantity-1) + " where ID="+to_string(idProduct)+"; " \
+        sql = "UPDATE warehouse set quantity = " + to_string(object.quantity - 1) + " where ID=" + to_string(idProduct) + "; " \
             "SELECT * from COMPANY";
         rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
 
@@ -400,7 +424,7 @@ class Client :public Abstract {
     string clientLogin, clientPassword;
 public:
     Client(int idClient, int idCart, string login, string password) :
-        clientId(idClient),cartId(idCart), clientLogin(login), clientPassword(password){}
+        clientId(idClient), cartId(idCart), clientLogin(login), clientPassword(password) {}
 
     virtual void add() override {
         sqlite3* db;
@@ -420,7 +444,7 @@ public:
             "clientLogin TEXT NOT NULL UNIQUE,"
             "clientPassword TEXT NOT NULL,"
             "idCart INTEGER UNIQUE,"
-            "FOREIGN KEY (idCart) REFERENCES cart(id));"; 
+            "FOREIGN KEY (idCart) REFERENCES cart(id));";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -429,7 +453,7 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('"+to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cartId)+ "');";
+        insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -487,8 +511,15 @@ public:
 
 int main(int argc, char* argv[]) {
     string searched_item;
-    Warehouse warehouse();
+    Category category1("owoc");
+    Warehouse warehouse1(12, 12, "banan", "owoc");
+    warehouse1.add();
 
+    cout << "Podaj item: " << endl;
+    cin >> searched_item;
+    warehouse1.checkQuantity(searched_item);
+
+    /*
     Cart koszyk1(1,1);
     koszyk1.add();
 
@@ -541,7 +572,10 @@ int main(int argc, char* argv[]) {
 
 
     }
-    
+
+
+
+    */
 
 
     return 0;
