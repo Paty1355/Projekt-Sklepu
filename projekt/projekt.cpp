@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <vector>
 #include <string>
 #include "sqlite/sqlite3.h"
 
@@ -175,6 +176,70 @@ public:
 //        sqlite3_close(db);
 //    }
 //};
+
+class Produkt {
+public:
+    std::string kategoria;
+    std::string nazwa;
+    int ilosc;
+    double cena;
+
+    Produkt(const std::string& kat, const std::string& n, int i, double c)
+        : kategoria(kat), nazwa(n), ilosc(i), cena(c) {}
+};
+
+class Magazyn {
+private:
+    std::vector<Produkt> produkty;
+    sqlite3* db; // Wskaźnik na bazę danych
+
+public:
+    Magazyn() {
+        int rc = sqlite3_open("magazyn.db", &db); // Otwarcie lub utworzenie bazy danych
+
+        if (rc) {
+            std::cerr << "Błąd otwarcia bazy danych: " << sqlite3_errmsg(db) << std::endl;
+        }
+        else {
+            std::cout << "Baza danych otwarta." << std::endl;
+        }
+    }
+
+    ~Magazyn() {
+        sqlite3_close(db); // Zamknięcie bazy danych w destruktorze
+    }
+
+    void DodajProdukt(const Produkt& p) {
+        produkty.push_back(p);
+
+        // Zapis do bazy danych
+        std::string sql = "INSERT INTO produkty (kategoria, nazwa, ilosc, cena) VALUES ('" +
+            p.kategoria + "', '" + p.nazwa + "', " + std::to_string(p.ilosc) +
+            ", " + std::to_string(p.cena) + ");";
+
+        int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
+
+        if (rc != SQLITE_OK) {
+            std::cerr << "Błąd zapisu do bazy danych: " << sqlite3_errmsg(db) << std::endl;
+        }
+    }
+
+    void WyswietlProdukty() {
+        for (const auto& produkt : produkty) {
+            std::cout << "Kategoria: " << produkt.kategoria
+                << ", Nazwa: " << produkt.nazwa
+                << ", Ilość: " << produkt.ilosc
+                << ", Cena: " << produkt.cena << std::endl;
+        }
+    }
+};
+
+
+
+
+
+
+
 
 
 
@@ -510,16 +575,32 @@ public:
 };
 
 int main(int argc, char* argv[]) {
+    Magazyn mojMagazyn;
+    Produkt smartfon("Elektronika", "Smartfon", 10, 1499.99);
+    Produkt laptop("Elektronika", "Laptop", 5, 2999.99);
+
+    mojMagazyn.DodajProdukt(smartfon);
+    mojMagazyn.DodajProdukt(laptop);
+
+    std::cout << "Zawartość magazynu:" << std::endl;
+    mojMagazyn.WyswietlProdukty();
+
+
+
+
+    /*
     string searched_item;
     Category category1("owoc");
     Warehouse warehouse1(12, 12, "banan", "owoc");
+    Warehouse warehouse2(13, 13, "kiwi", "owoc");
     warehouse1.add();
+    warehouse2.add();
 
     cout << "Podaj item: " << endl;
     cin >> searched_item;
     warehouse1.checkQuantity(searched_item);
 
-    /*
+    
     Cart koszyk1(1,1);
     koszyk1.add();
 
