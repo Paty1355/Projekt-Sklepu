@@ -19,7 +19,6 @@ public:
     virtual void add() = 0;
     virtual void remove() = 0;
     virtual void search() = 0;
-    //virtual void search1(string searched_item) = 0;
 };
 
 class Category :public Abstract {
@@ -177,67 +176,6 @@ public:
 //    }
 //};
 
-class Produkt {
-public:
-    std::string kategoria;
-    std::string nazwa;
-    int ilosc;
-    double cena;
-
-    Produkt(const std::string& kat, const std::string& n, int i, double c)
-        : kategoria(kat), nazwa(n), ilosc(i), cena(c) {}
-};
-
-class Magazyn {
-private:
-    std::vector<Produkt> produkty;
-    sqlite3* db; // Wskaźnik na bazę danych
-
-public:
-    Magazyn() {
-        int rc = sqlite3_open("magazyn.db", &db); // Otwarcie lub utworzenie bazy danych
-
-        if (rc) {
-            std::cerr << "Błąd otwarcia bazy danych: " << sqlite3_errmsg(db) << std::endl;
-        }
-        else {
-            std::cout << "Baza danych otwarta." << std::endl;
-        }
-    }
-
-    ~Magazyn() {
-        sqlite3_close(db); // Zamknięcie bazy danych w destruktorze
-    }
-
-    void DodajProdukt(const Produkt& p) {
-        produkty.push_back(p);
-
-        // Zapis do bazy danych
-        std::string sql = "INSERT INTO produkty (kategoria, nazwa, ilosc, cena) VALUES ('" +
-            p.kategoria + "', '" + p.nazwa + "', " + std::to_string(p.ilosc) +
-            ", " + std::to_string(p.cena) + ");";
-
-        int rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, nullptr);
-
-        if (rc != SQLITE_OK) {
-            std::cerr << "Błąd zapisu do bazy danych: " << sqlite3_errmsg(db) << std::endl;
-        }
-    }
-
-    void WyswietlProdukty() {
-        for (const auto& produkt : produkty) {
-            std::cout << "Kategoria: " << produkt.kategoria
-                << ", Nazwa: " << produkt.nazwa
-                << ", Ilość: " << produkt.ilosc
-                << ", Cena: " << produkt.cena << std::endl;
-        }
-    }
-};
-
-
-
-
-
 
 
 
@@ -299,6 +237,8 @@ public:
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
 
         sqlite3_close(db);
+
+        cout << "Pomyślnie zapisano produkt!" << endl;
     }
 
     virtual void remove() override {
@@ -575,19 +515,8 @@ public:
 };
 
 int main(int argc, char* argv[]) {
-    Magazyn mojMagazyn;
-    Produkt smartfon("Elektronika", "Smartfon", 10, 1499.99);
-    Produkt laptop("Elektronika", "Laptop", 5, 2999.99);
-
-    mojMagazyn.DodajProdukt(smartfon);
-    mojMagazyn.DodajProdukt(laptop);
-
-    std::cout << "Zawartość magazynu:" << std::endl;
-    mojMagazyn.WyswietlProdukty();
-
-
-
-
+    string category_name, product_name;
+    int price, quantity;
     /*
     string searched_item;
     Category category1("owoc");
@@ -603,6 +532,8 @@ int main(int argc, char* argv[]) {
     
     Cart koszyk1(1,1);
     koszyk1.add();
+
+    */
 
     //Category zywnosc("banan");
    // zywnosc.add();
@@ -635,10 +566,46 @@ int main(int argc, char* argv[]) {
                 cout << "Choose 1 or 2 or 3" << endl;
                 cin >> choice;
             }
-            switch (choice) {
+            if (choice == 1) {
+                cout << "Wprowadz nazwe kategorii: " << endl;
+                cin >> category_name;
+                cout << "Wprowadz nazwe produktu: " << endl;
+                cin >> product_name;
+                cout << "Wprowadz cene produktu: " << endl;
+                cin >> price;
+                cout << "Wprowadz ilosc: " << endl;
+                cin >> quantity;
+                Category category(category_name);
+                Warehouse warehouse(price, quantity, product_name, category_name);
+                category.add();
+                warehouse.add();
+            }
+            /*switch (choice) {
+            case 1:
+                cout << "Wprowadz nazwe kategorii: " << endl;
+                cin >> category_name;
+                cout << "Wprowadz nazwe produktu: " << endl;
+                cin >> product_name;
+                cout << "Wprowadz cene produktu: " << endl;
+                cin >> price;
+                cout << "Wprowadz ilosc: " << endl;
+                cin >> quantity;
+                Category category(category_name);
+                Warehouse warehouse(price, quantity, product_name, category_name);
+                category.add();
+                warehouse.add();
+                break;
+                //rozbuduj o powrot do menu czy cos
+            case 2:
+
+                
             }
             //dodawanie
             //dodawanie produktów do magazynu
+            //usuwanie produktow
+            //przeszukiwanie
+            */
+                
 
         }
     }
@@ -654,9 +621,6 @@ int main(int argc, char* argv[]) {
 
     }
 
-
-
-    */
 
 
     return 0;
