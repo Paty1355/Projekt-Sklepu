@@ -442,8 +442,16 @@ class Client :public Abstract {
     int clientId, cartId;
     string clientLogin, clientPassword;
 public:
+    Client();
     Client(int idClient, int idCart, string login, string password) :
         clientId(idClient), cartId(idCart), clientLogin(login), clientPassword(password) {}
+
+    void setValue(int idClient, int idCart, string login, string password) {
+        clientId = idClient;
+        cartId = idCart;
+        clientLogin = login;
+        clientPassword = password;
+    }
 
     virtual void add() override {
         sqlite3* db;
@@ -657,11 +665,10 @@ int main(int argc, char* argv[]) {
         cin >> login;
         cout << "User password: " << endl;
         cin >> password;
-        Client klient1(1, 1, login, password);
-        klient1.add();
+        Client klient[count_person];
+        klient[count_person].setValue(1, 1, login, password);
+        klient[count_person].add();
         //wyswietlenie produktów z magazynu
-
-
     }
     else {
         cout << "Choose 1 or 2" << endl;
