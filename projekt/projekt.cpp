@@ -534,8 +534,8 @@ int main(int argc, char* argv[]) {
                 cout << "Choose 1 or 2 or 3" << endl;
                 cin >> choice;
             }
-            switch (choice) {
-            }
+            //switch (choice) {
+           // }
             //dodawanie
             //dodawanie produktów do magazynu
         }
@@ -545,13 +545,11 @@ int main(int argc, char* argv[]) {
         cin >> login;
         cout << "User password: " << endl;
         cin >> password;
-        Client klient[count_person];
-        klient[count_person].setValue(1, 1, login, password);
-        klient[count_person].add();
+       // Client klient[count_person];
+       // klient[count_person].setValue(1, 1, login, password);
+      //  klient[count_person].add();
         //wyswietlenie produktów z magazynu
     }
-    
-
-
+   
     return 0;
 }
