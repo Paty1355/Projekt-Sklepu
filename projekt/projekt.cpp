@@ -1,8 +1,8 @@
 ﻿#include <iostream>
-#include <vector>
 #include <string>
 #include <stdlib.h>
 #include "sqlite/sqlite3.h"
+#include <windows.h>
 
 using namespace std;
 
@@ -96,88 +96,6 @@ public:
     virtual void search() override {}
 };
 
-//class Product : public Category {
-//    int price;
-//    string productName;
-//public:
-//    Product(int price, string nameP, string nameC) :
-//        price(price), productName(nameP), Category(nameC) {}
-//
-//    virtual void add() override {
-//        sqlite3* db;
-//        char* zErrMsg = 0;
-//        int rc;
-//        string table_sql, insert_sql;
-//        const char* data = "Callback function called";
-//
-//        /* Open database */
-//        rc = sqlite3_open("shop.db", &db);
-//
-//        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-//
-//        /* Creating Tables*/
-//        table_sql = "CREATE TABLE IF NOT EXISTS products("
-//            "id INTEGER PRIMARY KEY,"
-//            "productName TEXT NOT NULL UNIQUE,"
-//            "price INTEGER,"
-//            "productCategory TEXT,"
-//            "FOREIGN KEY(productCategory) REFERENCES categories(categoryName))";
-//
-//        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
-//
-//        if (rc != SQLITE_OK) {
-//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-//            sqlite3_free(zErrMsg);
-//        }
-//
-//        insert_sql = "INSERT OR IGNORE INTO products (productName, price, productCategory) VALUES ('" + productName + "' ," + to_string(price) +", '" + categoryName + "');";
-//        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
-//
-//        if (rc != SQLITE_OK) {
-//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-//            sqlite3_free(zErrMsg);
-//        }
-//
-//        /* Create SQL statement */
-//        string select_sql = "SELECT * from products";
-//
-//        /* Execute SQL statement */
-//        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
-//
-//        sqlite3_close(db);
-//    }
-//
-//    virtual void remove() override {
-//        sqlite3* db;
-//        char* zErrMsg = 0;
-//        int rc;
-//        string remove_sql, select_sql;
-//        const char* data = "Callback function called"; //zastanow sie nad tym
-//
-//        /* Open database */
-//        rc = sqlite3_open("shop.db", &db);
-//
-//        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-//
-//        /* Creating Tables*/
-//        remove_sql = "DELETE FROM products "
-//            "WHERE productName='" + productName + "' ";
-//
-//        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
-//
-//        if (rc != SQLITE_OK) {
-//            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-//            sqlite3_free(zErrMsg);
-//        }
-//        /* Create SQL statement */
-//        select_sql = "SELECT * from products";
-//
-//        /* Execute SQL statement */
-//        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
-//        sqlite3_close(db);
-//    }
-//};
-
 
 class Product : public Category {
     friend class Cart;
@@ -192,19 +110,11 @@ public:
 };
 
 
-
-
-
 class Warehouse : public Product {
     //friend class Cart;
 protected:
     Product product;
-    //int price;
-    //int quantity;
-    //string productName;
 public:
-    //Warehouse(int priceP, int quantityP, string nameP, string nameC) :
-        //price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
 
     Warehouse(const Product& p) : product(p) {};
     Warehouse() {};
@@ -257,7 +167,7 @@ public:
 
         sqlite3_close(db);
 
-        cout << "Pomyślnie zapisano produkt!" << endl;
+        cout << "Your product has been successfully added!" << endl;
     }
 
     virtual void remove() override {
@@ -288,6 +198,8 @@ public:
         /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
         sqlite3_close(db);
+
+        cout << "Your product has been successfully removed!" << endl;
     }
 
     virtual void search() override {
@@ -541,62 +453,64 @@ public:
     }
 };
 
+
+
+//int choose_option() {
+//    int choice;
+//    while (true) {
+//        cout << "1. Add category or/and product" << endl;
+//        cout << "2. Delete product" << endl;
+//        cout << "3. Search for product" << endl;
+//        cout << "4. Show products" << endl;
+//        cout << "5. MENU" << endl;
+//        cout << "Please enter your choice: ";
+//        cin >> choice;
+//
+//        if (cin.fail() || (choice < 1 || choice > 5)) {
+//            cin.clear(); // Clear the error flag
+//            cin.ignore(INT_MAX, '\n'); // Discard invalid input
+//            cout << "Invalid input, please choose 1, 2, 3, 4, or 5." << endl;
+//        }
+//        else {
+//            break;
+//        }
+//    }
+//    return choice;
+//}
+
+
 int choose_option() {
-    int choice = 0;
+    int choice;
+
     cout << "1. Add category or/and product" << endl;
     cout << "2. Delete product" << endl;
     cout << "3. Search for product" << endl;
     cout << "4. Show products" << endl;
     cout << "5. MENU" << endl;
-    while (choice != 1 && choice != 2 && choice != 3 && choice != 4 && choice != 5) {
-        cout << "Choose 1 or 2 or 3 or 4 or 5" << endl;
+
+    do {
+        cout << "Please enter your choice (1-5): ";
         cin >> choice;
-    }
+
+        if (choice < 1 || choice > 5) {
+            cout << "Invalid input, please choose 1, 2, 3, 4, or 5." << endl;
+        }
+    } while (choice < 1 || choice > 5);
+
     return choice;
 }
+
 
 
 int main(int argc, char* argv[]) {
     string category_name, product_name;
     int price, quantity;
-    
-    /*
-    string searched_item;
-    Category category1("owoc");
-    Warehouse warehouse1(12, 12, "banan", "owoc");
-    Warehouse warehouse2(13, 13, "kiwi", "owoc");
-    warehouse1.add();
-    warehouse2.add();
-
-    cout << "Podaj item: " << endl;
-    cin >> searched_item;
-    warehouse1.checkQuantity(searched_item);
-
-    
-    Cart koszyk1(1,1);
-    koszyk1.add();
-    */
-    
-
-    //Category zywnosc("banan");
-   // zywnosc.add();
-   // Category zywnosc2("truskawka");
-   // zywnosc2.remove();
-   // Product produkt1(2, "Truskawka", "banan");
-  //  produkt1.add();
-   // produkt1.remove();
-
-
     int choice;
     char answer;
     string password, login;
 
-    Warehouse warehouse2;
 
-    //element poczatkowy
-    Product product0(12, 12, "arbuz", "owoc");
-    Warehouse warehouse1(product0);
-
+    Warehouse warehouse;
 
     cout << "-------------------MENU---------------------" << endl;
     cout << "1. Admin" << endl;
@@ -605,11 +519,20 @@ int main(int argc, char* argv[]) {
 
     if (choice == 1) {
         cout << "Admin password: " << endl;
+
+        //hide password input
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD mode = 0;
+        GetConsoleMode(hStdin, &mode);
+        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
         cin >> password;
+        SetConsoleMode(hStdin, mode);
+
         if (password == "admin") {
-            choice = 0;
+            choice = 5;
             cout << "Login successfully" << endl;
-            while (choice == 0) {
+
+            while (true) {
                 system("cls");
                 choice = choose_option();
                 if (choice == 1) {
@@ -631,44 +554,53 @@ int main(int argc, char* argv[]) {
                         cout << "Wprowadz ilosc: " << endl;
                         cin >> quantity;
                         cout << endl;
-                        //Warehouse warehouse(price, quantity, product_name, category_name);
-                        //warehouse.add();
                         Product product(price, quantity, product_name, category_name);
-                        warehouse2.set(product);
-                        warehouse2.add();
-                        choice = 0;
+                        warehouse.set(product);
+                        warehouse.add();
+                        system("pause");
+                       
                     }
                     if (answer == 'n') {
-                        choice = 0;
+                        //choice = 5;
                     }
                 }
                 else if (choice == 2) {
                     cout << "Enter the name of the product that you want to delete:" << endl;
                     cin >> product_name;
-                    choice = 0;            
+                    warehouse.remove();
+                    system("pause");
+                    choice = 5;            
                 }
                 else if (choice == 3) {
+                    cout << "What product do you want to find information about?" << endl;
+                    cin >> product_name;
+                    warehouse.checkQuantity(product_name);
+                    system("pause");
                 }
                 else if (choice == 4) {
-                    warehouse1.search();
+                    warehouse.search();
+                    system("pause");
                 }
                 else {
-                    choice = 0;
+                    break;
                 }
-
-                //dodawanie
-                //dodawanie produktów do magazynu
-                //usuwanie produktow
-                //przeszukiwanie
-
+                cout << choice;
             }
+
         }
     }
     else if (choice == 2) {
         cout << "User login: " << endl;
         cin >> login;
         cout << "User password: " << endl;
+        //hide password input
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD mode = 0;
+        GetConsoleMode(hStdin, &mode);
+        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
         cin >> password;
+        SetConsoleMode(hStdin, mode);
+
        // Client klient[count_person];
        // klient[count_person].setValue(1, 1, login, password);
       //  klient[count_person].add();
@@ -680,6 +612,3 @@ int main(int argc, char* argv[]) {
     }
     return 0;
 }
-
-
-//mozna zamiast tego produktu poczatkowego zrobic coss tego typu ze trzeba dodac produkt zanim sie przejdzie do wyszukiwania czy cos idk
