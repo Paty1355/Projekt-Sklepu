@@ -626,19 +626,19 @@ int main(int argc, char* argv[]) {
                     if (answer == 'n') {
                         choice = 0;
                     }
-                if (choice == 2) {
+                else if (choice == 2) {
                     cout << "Enter the name of the product that you want to delete:" << endl;
                     cin >> product_name;
                     warehouse1.remove();
                     choice = 0;
                 }
-                if (choice == 3) {
-
+                else if (choice == 3) {
+                    
                 }
-                if (choice == 4) {
+                else if (choice == 4) {
                     warehouse1.search();
                 }
-                if (choice == 5) {
+                else  {
                     choice = 0;
                 }
 
