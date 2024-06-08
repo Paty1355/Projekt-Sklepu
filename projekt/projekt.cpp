@@ -1,6 +1,7 @@
 ﻿#include <iostream>
 #include <vector>
 #include <string>
+#include <stdlib.h>
 #include "sqlite/sqlite3.h"
 
 using namespace std;
@@ -25,6 +26,7 @@ class Category :public Abstract {
 protected:
     string categoryName;
 public:
+    Category() {};
     Category(string name) :
         categoryName(name) {}
 
@@ -177,22 +179,34 @@ public:
 //};
 
 
-
-
-
-
-
-
-
-class Warehouse : public Category {
+class Product : public Category {
     friend class Cart;
 protected:
     int price;
     int quantity;
     string productName;
 public:
-    Warehouse(int priceP, int quantityP, string nameP, string nameC) :
+    Product(): productName(""), price(0), quantity(0) {};
+    Product(int priceP, int quantityP, string nameP, string nameC) :
         price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
+};
+
+
+
+
+
+class Warehouse : public Product {
+    //friend class Cart;
+protected:
+    Product product;
+    //int price;
+    //int quantity;
+    //string productName;
+public:
+    //Warehouse(int priceP, int quantityP, string nameP, string nameC) :
+        //price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
+
+    Warehouse(const Product& p) : product(p) {};
 
     virtual void add() override {
         sqlite3* db;
@@ -514,9 +528,25 @@ public:
     }
 };
 
+int choose_option() {
+    int choice = 0;
+    cout << "1. Add category or/and product" << endl;
+    cout << "2. Delete product" << endl;
+    cout << "3. Search for product" << endl;
+    cout << "4. Show products" << endl;
+    cout << "5. MENU" << endl;
+    while (choice != 1 && choice != 2 && choice != 3 && choice != 4 && choice != 5) {
+        cout << "Choose 1 or 2 or 3 or 4 or 5" << endl;
+        cin >> choice;
+    }
+    return choice;
+}
+
+
 int main(int argc, char* argv[]) {
     string category_name, product_name;
     int price, quantity;
+    
     /*
     string searched_item;
     Category category1("owoc");
@@ -532,8 +562,8 @@ int main(int argc, char* argv[]) {
     
     Cart koszyk1(1,1);
     koszyk1.add();
-
     */
+    
 
     //Category zywnosc("banan");
    // zywnosc.add();
@@ -543,73 +573,86 @@ int main(int argc, char* argv[]) {
   //  produkt1.add();
    // produkt1.remove();
 
+
     int choice;
+    char answer;
     string password, login;
+
+    //element poczatkowy
+    Product product0(12, 12, "arbuz", "owoc");
+    Warehouse warehouse1(product0);
+
+
     cout << "-------------------MENU---------------------" << endl;
     cout << "1. Admin" << endl;
     cout << "2. User" << endl;
     cin >> choice;
-    while (choice != 1 && choice != 2) {
-        cout << "Choose 1 or 2" << endl;
-        cin >> choice;
-    }
+
     if (choice == 1) {
         cout << "Admin password: " << endl;
         cin >> password;
         if (password == "admin") {
             choice = 0;
             cout << "Login successfully" << endl;
-            cout << "1. Add category" << endl;
-            cout << "2. Add product to warehouse" << endl;
-            cout << "3. Menu" << endl;
-            while (choice != 1 && choice != 2 && choice != 3) {
-                cout << "Choose 1 or 2 or 3" << endl;
-                cin >> choice;
-            }
-            if (choice == 1) {
-                cout << "Wprowadz nazwe kategorii: " << endl;
-                cin >> category_name;
-                cout << "Wprowadz nazwe produktu: " << endl;
-                cin >> product_name;
-                cout << "Wprowadz cene produktu: " << endl;
-                cin >> price;
-                cout << "Wprowadz ilosc: " << endl;
-                cin >> quantity;
-                Category category(category_name);
-                Warehouse warehouse(price, quantity, product_name, category_name);
-                category.add();
-                warehouse.add();
-            }
-            /*switch (choice) {
-            case 1:
-                cout << "Wprowadz nazwe kategorii: " << endl;
-                cin >> category_name;
-                cout << "Wprowadz nazwe produktu: " << endl;
-                cin >> product_name;
-                cout << "Wprowadz cene produktu: " << endl;
-                cin >> price;
-                cout << "Wprowadz ilosc: " << endl;
-                cin >> quantity;
-                Category category(category_name);
-                Warehouse warehouse(price, quantity, product_name, category_name);
-                category.add();
-                warehouse.add();
-                break;
-                //rozbuduj o powrot do menu czy cos
-            case 2:
+            while (choice == 0) {
+                system("cls");
+                choice = choose_option();
+                if (choice == 1) {
+                    cout << "Wprowadz nazwe kategorii: " << endl;
+                    cin >> category_name;
+                    Category category(category_name);
+                    category.add();
+                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
+                    cin >> answer;
+                    while (answer != 't' && answer != 'n') {
+                        cout << "Please choose only t or n" << endl;
+                        cin >> answer;
+                    }
+                    if (answer == 't') {
+                        cout << "Wprowadz nazwe produktu: " << endl;
+                        cin >> product_name;
+                        cout << "Wprowadz cene produktu: " << endl;
+                        cin >> price;
+                        cout << "Wprowadz ilosc: " << endl;
+                        cin >> quantity;
+                        cout << endl;
+                        //Warehouse warehouse(price, quantity, product_name, category_name);
+                        //warehouse.add();
+                        Product product(price, quantity, product_name, category_name);
+                        Warehouse warehouse2(product);
+                        warehouse2.add();
+                        choice = 0;
+                    }
+                    if (answer == 'n') {
+                        choice = 0;
+                    }
+                if (choice == 2) {
+                    cout << "Enter the name of the product that you want to delete:" << endl;
+                    cin >> product_name;
+                    warehouse1.remove();
+                    choice = 0;
+                }
+                if (choice == 3) {
 
-                
+                }
+                if (choice == 4) {
+                    warehouse1.search();
+                }
+                if (choice == 5) {
+                    choice = 0;
+                }
+
+                    //dodawanie
+                    //dodawanie produktów do magazynu
+                    //usuwanie produktow
+                    //przeszukiwanie
+
+                }
             }
-            //dodawanie
-            //dodawanie produktów do magazynu
-            //usuwanie produktow
-            //przeszukiwanie
-            */
-                
 
         }
     }
-    else {
+    else if (choice == 2) {
         cout << "User login: " << endl;
         cin >> login;
         cout << "User password: " << endl;
@@ -620,8 +663,14 @@ int main(int argc, char* argv[]) {
 
 
     }
-
+    else {
+        cout << "Choose 1 or 2" << endl;
+        cin >> choice;
+    }
 
 
     return 0;
 }
+
+
+//mozna zamiast tego produktu poczatkowego zrobic coss tego typu ze trzeba dodac produkt zanim sie przejdzie do wyszukiwania czy cos idk
