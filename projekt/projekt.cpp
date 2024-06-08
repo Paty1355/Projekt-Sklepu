@@ -545,7 +545,7 @@ int main(int argc, char* argv[]) {
         cin >> login;
         cout << "User password: " << endl;
         cin >> password;
-       // Client klient[count_person];
+        Client klient[count_person];
         klient[count_person].setValue(1, 1, login, password);
         klient[count_person].add();
         //wyswietlenie produktów z magazynu
