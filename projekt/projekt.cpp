@@ -207,6 +207,11 @@ public:
         //price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
 
     Warehouse(const Product& p) : product(p) {};
+    Warehouse() {};
+
+    void set(const Product& p) {
+        product = p;
+    }
 
     virtual void add() override {
         sqlite3* db;
@@ -586,6 +591,8 @@ int main(int argc, char* argv[]) {
     char answer;
     string password, login;
 
+    Warehouse warehouse2;
+
     //element poczatkowy
     Product product0(12, 12, "arbuz", "owoc");
     Warehouse warehouse1(product0);
@@ -627,7 +634,7 @@ int main(int argc, char* argv[]) {
                         //Warehouse warehouse(price, quantity, product_name, category_name);
                         //warehouse.add();
                         Product product(price, quantity, product_name, category_name);
-                        Warehouse warehouse2(product);
+                        warehouse2.set(product);
                         warehouse2.add();
                         choice = 0;
                     }
@@ -638,20 +645,15 @@ int main(int argc, char* argv[]) {
                 else if (choice == 2) {
                     cout << "Enter the name of the product that you want to delete:" << endl;
                     cin >> product_name;
-                    warehouse1.remove();
-                    choice = 0;
-                    cout << "tu weszlo 2";
+                    choice = 0;            
                 }
                 else if (choice == 3) {
-                    cout << "tu weszlo 3";
                 }
                 else if (choice == 4) {
                     warehouse1.search();
-                    cout << "tu weszlo 4";
                 }
                 else {
                     choice = 0;
-                    cout << "tu weszlo 5";
                 }
 
                 //dodawanie
