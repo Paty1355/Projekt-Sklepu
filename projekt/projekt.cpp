@@ -1,6 +1,9 @@
 ﻿#include <iostream>
 #include <string>
 #include <stdlib.h>
+#include <cstdio>
+#include <limits>
+#include <algorithm>
 #include "sqlite/sqlite3.h"
 #include <windows.h>
 
@@ -28,7 +31,7 @@ protected:
 public:
     Category() {};
     Category(string name) :
-        categoryName(name) {}
+        categoryName(name) {};
 
     virtual void add() override {
         sqlite3* db;
@@ -60,6 +63,7 @@ public:
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
+
         sqlite3_close(db);
     }
 
@@ -103,15 +107,17 @@ protected:
     int price;
     int quantity;
     string productName;
+
 public:
     Product(): productName(""), price(0), quantity(0) {};
     Product(int priceP, int quantityP, string nameP, string nameC) :
-        price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {}
+        price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {} //Category(nameC)
 };
 
 
 class Warehouse : public Product {
     //friend class Cart;
+    friend class Category;
 protected:
     Product product;
 public:
@@ -123,7 +129,7 @@ public:
         product = p;
     }
 
-    virtual void add() override {
+    void add(string product_name) {
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -167,7 +173,7 @@ public:
 
         sqlite3_close(db);
 
-        cout << "Your product has been successfully added!" << endl;
+        //cout << "Your product has been successfully added!" << endl;
     }
 
     virtual void remove() override {
@@ -455,160 +461,337 @@ public:
 
 
 
+
 //int choose_option() {
 //    int choice;
-//    while (true) {
-//        cout << "1. Add category or/and product" << endl;
-//        cout << "2. Delete product" << endl;
-//        cout << "3. Search for product" << endl;
-//        cout << "4. Show products" << endl;
-//        cout << "5. MENU" << endl;
-//        cout << "Please enter your choice: ";
+//    do {
+//        cout << "1. Add category or/and product\n"
+//            << "2. Delete product\n"
+//            << "3. Search for product\n"
+//            << "4. Show products\n"
+//            << "5. MENU\n"
+//            << "Please enter your choice: ";
 //        cin >> choice;
 //
-//        if (cin.fail() || (choice < 1 || choice > 5)) {
-//            cin.clear(); // Clear the error flag
-//            cin.ignore(INT_MAX, '\n'); // Discard invalid input
-//            cout << "Invalid input, please choose 1, 2, 3, 4, or 5." << endl;
+//        if (cin.fail() || choice < 1 || choice > 5) {
+//            cin.clear();
+//            cin.ignore(10000, '\n'); // Zignoruj do 10000 znaków do napotkania znaku nowej linii
+//            cout << "Invalid input, please choose 1, 2, 3, 4, or 5.\n";
 //        }
-//        else {
-//            break;
+//    } while (choice < 1 || choice > 5);
+//    return choice;
+//}
+//
+//void pause_program() {
+//    cout << "Press Enter to continue..." << endl;
+//    cin.ignore(100000, '\n'); // Ignore any remaining input
+//    cin.get(); // Wait for the Enter key
+//}
+//
+//
+//
+//int main(int argc, char* argv[]) {
+//    string category_name, product_name;
+//    int price, quantity;
+//    int choice;
+//    char answer;
+//    string password, login;
+//
+//
+//    Warehouse warehouse;
+//
+//    cout << "-------------------MENU---------------------" << endl;
+//    cout << "1. Admin" << endl;
+//    cout << "2. User" << endl;
+//    cin >> choice;
+//
+//    if (choice == 1) {
+//        cout << "Admin password: " << endl;
+//
+//        //hide password input
+//        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+//        DWORD mode = 0;
+//        GetConsoleMode(hStdin, &mode);
+//        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+//        cin >> password;
+//        SetConsoleMode(hStdin, mode);
+//
+//        if (password == "admin") {
+//            choice = 5;
+//            cout << "Login successfully" << endl;
+//
+//            while (true) {
+//                system("cls");
+//                choice = choose_option();
+//                if (choice == 1) {
+//                    cout << "Wprowadz nazwe kategorii: " << endl;
+//                    cin >> category_name;
+//                    Category category(category_name);
+//                    category.add();
+//                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
+//                    cin >> answer;
+//                    while (answer != 't' && answer != 'n') {
+//                        cout << "Please choose only t or n" << endl;
+//                        cin >> answer;
+//                    }
+//                    if (answer == 't') {
+//                        cout << "Wprowadz nazwe produktu: " << endl;
+//                        cin >> product_name;
+//                        cout << "Wprowadz cene produktu: " << endl;
+//                        cin >> price;
+//                        cout << "Wprowadz ilosc: " << endl;
+//                        cin >> quantity;
+//                        cout << endl;
+//                        Product product(price, quantity, product_name, category_name);
+//                        warehouse.set(product);
+//                        warehouse.add();
+//                        pause_program();
+//
+//
+//                    }
+//                    if (answer == 'n') {
+//                        //choice = 5;
+//                    }
+//                }
+//                else if (choice == 2) {
+//                    cout << "Enter the name of the product that you want to delete:" << endl;
+//                    cin >> product_name;
+//                    warehouse.remove();
+//                    cout << "Press ENTER to continue...";
+//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
+//                    choice = 5;
+//                }
+//                else if (choice == 3) {
+//                    cout << "What product do you want to find information about?" << endl;
+//                    cin >> product_name;
+//                    warehouse.checkQuantity(product_name);
+//                    cout << "Press ENTER to continue...";
+//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
+//                }
+//                else if (choice == 4) {
+//                    warehouse.search();
+//                    cout << "Press ENTER to continue...";
+//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
+//                }
+//                else {
+//                    break;
+//                }
+//                cout << choice;
+//            }
+//
+//
+//
+//            //coś nie działa teraz i się nie zapisuje do bazy danych
+//           /* do {
+//                system("cls");
+//                choice = choose_option();
+//                switch (choice) {
+//                case 1:
+//                    cout << "Wprowadz nazwe kategorii: " << endl;
+//                    cin >> category_name;
+//                    category.set(category_name);
+//                    category.add();
+//                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
+//                    cin >> answer;
+//                    while (answer != 't' && answer != 'n') {
+//                        cout << "Please choose only t or n" << endl;
+//                        cin >> answer;
+//                    }
+//                    if (answer == 't') {
+//                        cout << "Wprowadz nazwe produktu: " << endl;
+//                        cin >> product_name;
+//                        cout << "Wprowadz cene produktu: " << endl;
+//                        cin >> price;
+//                        cout << "Wprowadz ilosc: " << endl;
+//                        cin >> quantity;
+//                        cout << endl;
+//                        Product product(price, quantity, product_name, category_name);
+//                        warehouse.set(product);
+//                        warehouse.add();
+//                        system("pause");
+//                    }
+//                    break;
+//                case 2:
+//                    cout << "Enter the name of the product that you want to delete:" << endl;
+//                    cin >> product_name;
+//                    warehouse.remove();
+//                    system("pause");
+//                    break;
+//                case 3:
+//                    cout << "What product do you want to find information about?" << endl;
+//                    cin >> product_name;
+//                    warehouse.checkQuantity(product_name);
+//                    system("pause");
+//                    break;
+//                case 4:
+//                    warehouse.search();
+//                    system("pause");
+//                    break;
+//                default:
+//                    break;
+//                }
+//            } while (choice != 5);*/
+//
+//
 //        }
 //    }
-//    return choice;
+//    else if (choice == 2) {
+//        cout << "User login: " << endl;
+//        cin >> login;
+//        cout << "User password: " << endl;
+//        //hide password input
+//        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+//        DWORD mode = 0;
+//        GetConsoleMode(hStdin, &mode);
+//        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+//        cin >> password;
+//        SetConsoleMode(hStdin, mode);
+//
+//        // Client klient[count_person];
+//        // klient[count_person].setValue(1, 1, login, password);
+//       //  klient[count_person].add();
+//         //wyswietlenie produktów z magazynu
+//    }
+//    else {
+//        cout << "Choose 1 or 2" << endl;
+//        cin >> choice;
+//    }
+//    return 0;
 //}
 
 
+
+void pause_program() {
+    cout << "Press ENTER to continue...";
+    cin.ignore(); //ignores any input
+    cin.get(); //wait for enter key
+}
+
 int choose_option() {
-    int choice;
-
-    cout << "1. Add category or/and product" << endl;
+    int option;
+    cout << "1. Add category and product" << endl;
     cout << "2. Delete product" << endl;
-    cout << "3. Search for product" << endl;
-    cout << "4. Show products" << endl;
-    cout << "5. MENU" << endl;
-
-    do {
-        cout << "Please enter your choice (1-5): ";
-        cin >> choice;
-
-        if (choice < 1 || choice > 5) {
-            cout << "Invalid input, please choose 1, 2, 3, 4, or 5." << endl;
-        }
-    } while (choice < 1 || choice > 5);
-
-    return choice;
+    cout << "3. Check product quantity" << endl;
+    cout << "4. Search products" << endl;
+    cout << "5. Return to main menu" << endl;
+    cin >> option;
+    return option;
 }
 
 
-
-int main(int argc, char* argv[]) {
-    string category_name, product_name;
-    int price, quantity;
-    int choice;
+int main() {
+    int choice = 0;
+    string password, category_name, product_name;
+    double price;
+    int quantity;
     char answer;
-    string password, login;
-
 
     Warehouse warehouse;
 
-    cout << "-------------------MENU---------------------" << endl;
-    cout << "1. Admin" << endl;
-    cout << "2. User" << endl;
-    cin >> choice;
-
-    if (choice == 1) {
-        cout << "Admin password: " << endl;
-
-        //hide password input
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        DWORD mode = 0;
-        GetConsoleMode(hStdin, &mode);
-        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
-        cin >> password;
-        SetConsoleMode(hStdin, mode);
-
-        if (password == "admin") {
-            choice = 5;
-            cout << "Login successfully" << endl;
-
-            while (true) {
-                system("cls");
-                choice = choose_option();
-                if (choice == 1) {
-                    cout << "Wprowadz nazwe kategorii: " << endl;
-                    cin >> category_name;
-                    Category category(category_name);
-                    category.add();
-                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
-                    cin >> answer;
-                    while (answer != 't' && answer != 'n') {
-                        cout << "Please choose only t or n" << endl;
-                        cin >> answer;
-                    }
-                    if (answer == 't') {
-                        cout << "Wprowadz nazwe produktu: " << endl;
-                        cin >> product_name;
-                        cout << "Wprowadz cene produktu: " << endl;
-                        cin >> price;
-                        cout << "Wprowadz ilosc: " << endl;
-                        cin >> quantity;
-                        cout << endl;
-                        Product product(price, quantity, product_name, category_name);
-                        warehouse.set(product);
-                        warehouse.add();
-                        system("pause");
-                       
-                    }
-                    if (answer == 'n') {
-                        //choice = 5;
-                    }
-                }
-                else if (choice == 2) {
-                    cout << "Enter the name of the product that you want to delete:" << endl;
-                    cin >> product_name;
-                    warehouse.remove();
-                    system("pause");
-                    choice = 5;            
-                }
-                else if (choice == 3) {
-                    cout << "What product do you want to find information about?" << endl;
-                    cin >> product_name;
-                    warehouse.checkQuantity(product_name);
-                    system("pause");
-                }
-                else if (choice == 4) {
-                    warehouse.search();
-                    system("pause");
-                }
-                else {
-                    break;
-                }
-                cout << choice;
-            }
-
-        }
-    }
-    else if (choice == 2) {
-        cout << "User login: " << endl;
-        cin >> login;
-        cout << "User password: " << endl;
-        //hide password input
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-        DWORD mode = 0;
-        GetConsoleMode(hStdin, &mode);
-        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
-        cin >> password;
-        SetConsoleMode(hStdin, mode);
-
-       // Client klient[count_person];
-       // klient[count_person].setValue(1, 1, login, password);
-      //  klient[count_person].add();
-        //wyswietlenie produktów z magazynu
-    }
-    else {
-        cout << "Choose 1 or 2" << endl;
+    do {
+        cout << "-------------------MENU---------------------" << endl;
+        cout << "1. Admin" << endl;
+        cout << "2. User" << endl;
+        cout << "3. Exit" << endl;
         cin >> choice;
-    }
+
+        if (choice == 1) {
+            cout << "Admin password: " << endl;
+
+            // Hide password input
+            HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+            DWORD mode = 0;
+            GetConsoleMode(hStdin, &mode);
+            SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+            cin >> password;
+            SetConsoleMode(hStdin, mode);
+
+            if (password == "admin") {
+                cout << "Login successfully" << endl;
+
+                bool admin_running = true;
+                do {
+                    system("cls");
+                    choice = choose_option();
+                    switch (choice) {
+                    case 1:
+                        cout << "Enter category name: " << endl;
+                        cin >> category_name;
+                        {
+                            Category category(category_name);
+                            category.add();
+                        }
+                        cout << "Do you want to add a product? (t/n)" << endl;
+                        cin >> answer;
+                        while (answer != 't' && answer != 'n') {
+                            cout << "Please choose only t or n" << endl;
+                            cin >> answer;
+                        }
+                        if (answer == 't') {
+                            cout << "Enter product name: " << endl;
+                            cin >> product_name;
+                            cout << "Enter product price: " << endl;
+                            cin >> price;
+                            cout << "Enter quantity: " << endl;
+                            cin >> quantity;
+                            cout << endl;
+                            Product product(price, quantity, product_name, category_name);
+                            warehouse.set(product);
+                            warehouse.add(product_name);
+                            pause_program();
+                        }
+                        break;
+                    case 2:
+                        cout << "Enter the name of the product that you want to delete:" << endl;
+                        cin >> product_name;
+                        warehouse.remove();
+                        pause_program();
+                        break;
+                    case 3:
+                        cout << "What product do you want to find information about?" << endl;
+                        cin >> product_name;
+                        warehouse.checkQuantity(product_name);
+                        pause_program();
+                        break;
+                    case 4:
+                        warehouse.search();
+                        pause_program();
+                        break;
+                    case 5:
+                        admin_running = false;
+                        break;
+                    default:
+                        cout << "Invalid choice. Please select a valid option." << endl;
+                    }
+                } while (admin_running);
+            }
+            else {
+                cout << "Incorrect password." << endl;
+            }
+        }
+        else if (choice == 2) {
+            string login;
+            cout << "User login: " << endl;
+            cin >> login;
+            cout << "User password: " << endl;
+
+            // Hide password input
+            HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+            DWORD mode = 0;
+            GetConsoleMode(hStdin, &mode);
+            SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
+            cin >> password;
+            SetConsoleMode(hStdin, mode);
+
+            // Process user login here...
+            cout << "User logged in successfully." << endl;
+            pause_program();
+        }
+        else if (choice != 1 && choice != 2) {
+            cout << "Choose 1, 2, or 3" << endl;
+            cin >> choice;
+        }
+    } while (choice != 3);
+
     return 0;
 }
