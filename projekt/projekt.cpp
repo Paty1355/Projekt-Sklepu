@@ -276,7 +276,7 @@ int selectCartId(string product_name) {
 
 class Cart :public Product {
     friend class Client;
-    int cartId;
+   // int cartId;
    // int cartProducts[20][2];
 protected:
     Product product;
@@ -286,7 +286,7 @@ public:
 
     void setValue(const Product& p) {
         product = p;
-        cartId = selectCartId(product.productName);
+       // cartId = selectCartId(product.productName);
     }
 
     /*void setValue(int id, int products[20][2]) {
@@ -312,8 +312,8 @@ public:
         /* Creating Tables*/
         table_sql = "CREATE TABLE IF NOT EXISTS cart("
             "id INTEGER PRIMARY KEY,"
-            "nameProduct INTEGER,"
-            "quantityProduct INTEGER"
+            "nameProduct TEXT,"
+            "quantityProduct INTEGER,"
             "FOREIGN KEY (nameProduct) REFERENCES warehouse(productName));";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
@@ -330,7 +330,7 @@ public:
                 break;
             }
         }*/
-        insert_sql = "INSERT OR IGNORE INTO cart (idProduct, quantityProduct) VALUES ('" + product.productName + "' '" + to_string(product.quantity) + "');";
+        insert_sql = "INSERT OR IGNORE INTO cart (nameProduct, quantityProduct) VALUES ('" + product.productName + "', '" + to_string(product.quantity) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         sqlite3_close(db);
@@ -371,7 +371,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT warehouse.productName, cart.quantityProduct FROM warehouse INNER JOIN cart ON warehouse.id = cart.id";
+        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -497,7 +497,8 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cart.cartId)+ "');";
+        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword) VALUES ('" + clientLogin + "' , '" + clientPassword+ "');";
+       // insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cart.cartId) + "');";
         //insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -543,7 +544,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT * FROM client";
+        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -578,206 +579,6 @@ public:
         return false;
     }
 };
-
-//int choose_option() {
-//    int choice;
-//    do {
-//        cout << "1. Add category or/and product\n"
-//            << "2. Delete product\n"
-//            << "3. Search for product\n"
-//            << "4. Show products\n"
-//            << "5. MENU\n"
-//            << "Please enter your choice: ";
-//        cin >> choice;
-//
-//        if (cin.fail() || choice < 1 || choice > 5) {
-//            cin.clear();
-//            cin.ignore(10000, '\n'); // Zignoruj do 10000 znaków do napotkania znaku nowej linii
-//            cout << "Invalid input, please choose 1, 2, 3, 4, or 5.\n";
-//        }
-//    } while (choice < 1 || choice > 5);
-//    return choice;
-//}
-//
-//void pause_program() {
-//    cout << "Press Enter to continue..." << endl;
-//    cin.ignore(100000, '\n'); // Ignore any remaining input
-//    cin.get(); // Wait for the Enter key
-//}
-//
-//
-//
-//int main(int argc, char* argv[]) {
-//    string category_name, product_name;
-//    int price, quantity;
-//    int choice;
-//    char answer;
-//    string password, login;
-//
-//
-//    Warehouse warehouse;
-//
-//    cout << "-------------------MENU---------------------" << endl;
-//    cout << "1. Admin" << endl;
-//    cout << "2. User" << endl;
-//    cin >> choice;
-//
-//    if (choice == 1) {
-//        cout << "Admin password: " << endl;
-//
-//        //hide password input
-//        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-//        DWORD mode = 0;
-//        GetConsoleMode(hStdin, &mode);
-//        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
-//        cin >> password;
-//        SetConsoleMode(hStdin, mode);
-//
-//        if (password == "admin") {
-//            choice = 5;
-//            cout << "Login successfully" << endl;
-//
-//            while (true) {
-//                system("cls");
-//                choice = choose_option();
-//                if (choice == 1) {
-//                    cout << "Wprowadz nazwe kategorii: " << endl;
-//                    cin >> category_name;
-//                    Category category(category_name);
-//                    category.add();
-//                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
-//                    cin >> answer;
-//                    while (answer != 't' && answer != 'n') {
-//                        cout << "Please choose only t or n" << endl;
-//                        cin >> answer;
-//                    }
-//                    if (answer == 't') {
-//                        cout << "Wprowadz nazwe produktu: " << endl;
-//                        cin >> product_name;
-//                        cout << "Wprowadz cene produktu: " << endl;
-//                        cin >> price;
-//                        cout << "Wprowadz ilosc: " << endl;
-//                        cin >> quantity;
-//                        cout << endl;
-//                        Product product(price, quantity, product_name, category_name);
-//                        warehouse.set(product);
-//                        warehouse.add();
-//                        pause_program();
-//
-//
-//                    }
-//                    if (answer == 'n') {
-//                        //choice = 5;
-//                    }
-//                }
-//                else if (choice == 2) {
-//                    cout << "Enter the name of the product that you want to delete:" << endl;
-//                    cin >> product_name;
-//                    warehouse.remove();
-//                    cout << "Press ENTER to continue...";
-//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
-//                    choice = 5;
-//                }
-//                else if (choice == 3) {
-//                    cout << "What product do you want to find information about?" << endl;
-//                    cin >> product_name;
-//                    warehouse.checkQuantity(product_name);
-//                    cout << "Press ENTER to continue...";
-//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
-//                }
-//                else if (choice == 4) {
-//                    warehouse.search();
-//                    cout << "Press ENTER to continue...";
-//                    while (cin.get() != '\n') {} // Czeka na naciśnięcie Enter
-//                }
-//                else {
-//                    break;
-//                }
-//                cout << choice;
-//            }
-//
-//
-//
-//            //coś nie działa teraz i się nie zapisuje do bazy danych
-//           /* do {
-//                system("cls");
-//                choice = choose_option();
-//                switch (choice) {
-//                case 1:
-//                    cout << "Wprowadz nazwe kategorii: " << endl;
-//                    cin >> category_name;
-//                    category.set(category_name);
-//                    category.add();
-//                    cout << "Czy chcesz dodac produkt?(t/n)" << endl;
-//                    cin >> answer;
-//                    while (answer != 't' && answer != 'n') {
-//                        cout << "Please choose only t or n" << endl;
-//                        cin >> answer;
-//                    }
-//                    if (answer == 't') {
-//                        cout << "Wprowadz nazwe produktu: " << endl;
-//                        cin >> product_name;
-//                        cout << "Wprowadz cene produktu: " << endl;
-//                        cin >> price;
-//                        cout << "Wprowadz ilosc: " << endl;
-//                        cin >> quantity;
-//                        cout << endl;
-//                        Product product(price, quantity, product_name, category_name);
-//                        warehouse.set(product);
-//                        warehouse.add();
-//                        system("pause");
-//                    }
-//                    break;
-//                case 2:
-//                    cout << "Enter the name of the product that you want to delete:" << endl;
-//                    cin >> product_name;
-//                    warehouse.remove();
-//                    system("pause");
-//                    break;
-//                case 3:
-//                    cout << "What product do you want to find information about?" << endl;
-//                    cin >> product_name;
-//                    warehouse.checkQuantity(product_name);
-//                    system("pause");
-//                    break;
-//                case 4:
-//                    warehouse.search();
-//                    system("pause");
-//                    break;
-//                default:
-//                    break;
-//                }
-//            } while (choice != 5);*/
-//
-//
-//        }
-//    }
-//    else if (choice == 2) {
-//        cout << "User login: " << endl;
-//        cin >> login;
-//        cout << "User password: " << endl;
-//        //hide password input
-//        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
-//        DWORD mode = 0;
-//        GetConsoleMode(hStdin, &mode);
-//        SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
-//        cin >> password;
-//        SetConsoleMode(hStdin, mode);
-//
-//        // Client klient[count_person];
-//        // klient[count_person].setValue(1, 1, login, password);
-//       //  klient[count_person].add();
-//         //wyswietlenie produktów z magazynu
-//    }
-//    else {
-//        cout << "Choose 1 or 2" << endl;
-//        cin >> choice;
-//    }
-//    return 0;
-//}
-
-
-
 void pause_program() {
     cout << "Press ENTER to continue...";
     cin.ignore(); //ignores any input
@@ -816,6 +617,9 @@ void addToCart() {
 
     if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
+    cout << product_name << endl;
+
+
     sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
     sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
     sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
@@ -824,6 +628,7 @@ void addToCart() {
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         quantity = sqlite3_column_int(stmt, 0);
     }
+
     rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
@@ -834,16 +639,11 @@ void addToCart() {
         price = sqlite3_column_int(stmt, 0);
     }
 
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-    else {
-        Product product(price, quantity, product_name, category);
-        cart.setValue(product);
-        cart.add();
-        cart.updateWarehouseAddCart(product_name);
-    }
+    Product product(price, quantity, product_name, category);
+    cart.setValue(product);
+    cart.add();
+    cart.updateWarehouseAddCart(product_name);
+    
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
@@ -995,6 +795,7 @@ int main() {
             cout << "2. Login" << endl;
             cout << "3. Exit" << endl;
             cin >> choice;
+            cart.add();
 
             cout << "User login: " << endl;
             cin >> login;
@@ -1025,7 +826,7 @@ int main() {
                     cout << "4. Delete Product" << endl;
                     cin >> choice;
                     if (choice == 1) {
-                        cart.search();
+                        klient.search();
                     }
                     else if (choice == 2) {
                         warehouse.search();
