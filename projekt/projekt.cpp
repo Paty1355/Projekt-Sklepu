@@ -251,6 +251,7 @@ public:
     }
 
 };
+
 class Cart :public Abstract {
     int cartId;
     int idProduct;
@@ -365,7 +366,7 @@ class Client :public Abstract {
     int clientId, cartId;
     string clientLogin, clientPassword;
 public:
-    Client();
+    Client() {};
     Client(int idClient, int idCart, string login, string password) :
         clientId(idClient), cartId(idCart), clientLogin(login), clientPassword(password) {}
 
@@ -403,7 +404,7 @@ public:
         }
 
         insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cartId)+ "');";
-        insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
+        //insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -459,29 +460,30 @@ public:
     }
     bool checkData() {
         sqlite3* db;
+        sqlite3_stmt* stmt;
         char* zErrMsg = 0;
         int rc;
         string sql;
         rc = sqlite3_open("shop.db", &db);
+        string clientLoginResult;
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        sql = "SELECT * FROM client WHERE clientLogin ='" + clientLogin + "' AND clientPassword = '" + clientPassword + "';";
-        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+        sql = "SELECT clientLogin FROM client WHERE clientLogin ='" + clientLogin + "' AND clientPassword = '" + clientPassword + "';";
+        rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
 
-        cout << rc;
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+            const unsigned char* login = sqlite3_column_text(stmt, 0);
+            if (login) {
+                clientLoginResult = reinterpret_cast<const char*>(login);
+            }
         }
+        sqlite3_finalize(stmt);
         sqlite3_close(db);
-        return true;
+        if (clientLogin == clientLoginResult) return true;
+        return false;
     }
 };
-
-
-
 
 //int choose_option() {
 //    int choice;
@@ -698,17 +700,18 @@ int choose_option() {
     cin >> option;
     return option;
 }
-static int idCart = 1;
+static int idCart = 3;
 
 
 int main() {
-    int choice = 0;
+    int choice = 0, loginSuccessfully = 0;
     string password, category_name, product_name, login;
     double price;
     int quantity;
     char answer;
 
     Warehouse warehouse;
+    Client klient;
 
     do {
         cout << "-------------------MENU---------------------" << endl;
@@ -792,6 +795,13 @@ int main() {
             }
         }
         else if (choice == 2) {
+            choice = 0;
+            system("CLS");
+            cout << "1. Register" << endl;
+            cout << "2. Login" << endl;
+            cout << "3. Exit" << endl;
+            cin >> choice;
+
             cout << "User login: " << endl;
             cin >> login;
             cout << "User password: " << endl;
@@ -804,26 +814,21 @@ int main() {
             cin >> password;
             SetConsoleMode(hStdin, mode);
 
-            // Process user login here...
-            cout << "User logged in successfully." << endl;
-            pause_program();
-
-            choice = 0;
-            cout << "1. Register" << endl;
-            cout << "2. Login" << endl;
-            cin >> choice;
-            cout << "User login: " << endl;
-            cin >> login;
-            cout << "User password: " << endl;
-            cin >> password;
             if (choice == 1) {
-                Client klient(1, idCart, login, password);
+                klient.setValue(idCart, login, password);
                 klient.add();
                 idCart++;
             }
-            else {
-                Client klient(1, idCart, login, password);
-                klient.checkData();
+            else if(choice == 2){
+                klient.setValue(idCart, login, password);
+                loginSuccessfully = klient.checkData();
+                if (loginSuccessfully == 1) {
+                    cout << "Login Succesfully" << endl;
+                }
+                else {
+                    cout << "Data incorect" << endl;
+                    choice = 0;
+                }
             }
 
         }
