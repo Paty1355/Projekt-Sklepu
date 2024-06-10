@@ -192,7 +192,41 @@ public:
 
         /* Creating Tables*/
         remove_sql = "DELETE FROM warehouse "
-            "WHERE productName='" + productName + "' ";
+            "WHERE productName='" + product.productName + "' ";
+
+        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        /* Create SQL statement */
+        select_sql = "SELECT * FROM warehouse";
+
+        /* Execute SQL statement */
+        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
+        sqlite3_close(db);
+
+        cout << "Your product has been successfully removed!" << endl;
+    }
+
+
+
+    void removeP(string product) {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string remove_sql, select_sql;
+        const char* data = "Callback function called"; //zastanow sie nad tym
+
+        /* Open database */
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        /* Creating Tables*/
+        remove_sql = "DELETE FROM warehouse "
+            "WHERE productName='" + product + "' ";
 
         rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -579,6 +613,8 @@ public:
         return false;
     }
 };
+
+
 void pause_program() {
     cout << "Press ENTER to continue...";
     cin.ignore(); //ignores any input
@@ -706,6 +742,7 @@ int main() {
 
     Warehouse warehouse;
     Client klient;
+    
 
     do {
         cout << "-------------------MENU---------------------" << endl;
@@ -763,7 +800,9 @@ int main() {
                     case 2:
                         cout << "Enter the name of the product that you want to delete:" << endl;
                         cin >> product_name;
-                        warehouse.remove();
+                        //Product product1(price, quantity, product_name, category_name);
+                        //warehouse.set(product1);
+                        warehouse.removeP(product_name);
                         pause_program();
                         break;
                     case 3:
@@ -781,6 +820,8 @@ int main() {
                         break;
                     default:
                         cout << "Invalid choice. Please select a valid option." << endl;
+                        //admin_running = false;
+                        choose_option();
                     }
                 } while (admin_running);
             }
@@ -859,10 +900,14 @@ int main() {
             }
 
         }
-        else if (choice != 1 && choice != 2) {
-            cout << "Choose 1, 2, or 3" << endl;
+        else if (choice == 3) {
             break;
-            
+        }
+        else if (choice != 1 && choice != 2 && choice !=3) {
+            cout << "Choose 1, 2, or 3" << endl;
+            cin >> choice;
+            system("pause");
+
         }
     } while (choice != 3);
     return 0;
