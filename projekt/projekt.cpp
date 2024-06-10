@@ -116,7 +116,7 @@ public:
 
 
 class Warehouse : public Product {
-    //friend class Cart;
+    friend class Cart;
     friend class Category;
 protected:
     Product product;
@@ -254,10 +254,15 @@ public:
 
 class Cart :public Abstract {
     int cartId;
-    int idProduct;
+    int idProducts[20];
 public:
-    Cart(int id, int product) :
-        cartId(id), idProduct(product) {}
+    Cart() {};
+    Cart(int id, int products[20]) :
+        cartId(id) {
+        for (int i = 0; i < 20; i++) {
+            idProducts[i] = products[i];
+        }
+    }
 
     virtual void add() override {
         sqlite3* db;
@@ -284,9 +289,11 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO cart (idProduct) VALUES ('" + to_string(idProduct) + "');";
-        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
-
+        for (int i = 0;i < 20;i++) {
+            insert_sql = "INSERT OR IGNORE INTO cart (idProduct) VALUES ('" + to_string(idProducts[i]) + "');";
+            rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+        }
+       
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
@@ -329,7 +336,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT * FROM warehouse";
+        search_sql = "SELECT productName,price,quantity,productCategory FROM warehouse";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -338,21 +345,31 @@ public:
         }
         sqlite3_close(db);
     }
-    void buy(Warehouse& object) {
+    void buy(string product) {
         sqlite3* db;
+        sqlite3_stmt* stmt;
         char* zErrMsg = 0;
         int rc;
-        string sql;
+        string sqlQuantity, sqlUpdate;
+        int quantity;
 
-        /* Open database */
         rc = sqlite3_open("shop.db", &db);
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        sql = "UPDATE warehouse set quantity = " + to_string(object.quantity - 1) + " where ID=" + to_string(idProduct) + "; " \
-            "SELECT * from COMPANY";
-        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product + "';";
+        rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
 
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+            quantity = sqlite3_column_int(stmt, 0);
+        }
+        sqlite3_finalize(stmt);
+
+        for (int i = 0;i < 20;i++) {
+            sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName=" + product + "; " \
+                "SELECT * from COMPANY";
+            rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
+        }
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
@@ -704,7 +721,7 @@ static int idCart = 3;
 
 
 int main() {
-    int choice = 0, loginSuccessfully = 0;
+    int choice = 0, loginSuccessfuly = 0;
     string password, category_name, product_name, login;
     double price;
     int quantity;
@@ -712,6 +729,7 @@ int main() {
 
     Warehouse warehouse;
     Client klient;
+    Cart cart;
 
     do {
         cout << "-------------------MENU---------------------" << endl;
@@ -821,9 +839,30 @@ int main() {
             }
             else if(choice == 2){
                 klient.setValue(idCart, login, password);
-                loginSuccessfully = klient.checkData();
-                if (loginSuccessfully == 1) {
-                    cout << "Login Succesfully" << endl;
+                loginSuccessfuly = klient.checkData();
+                if (loginSuccessfuly == 1) {
+                    cout << "Login Successfuly" << endl;
+                    choice = 0;
+                    cout << "1. Check Cart" << endl;
+                    cout << "2. Search Product" << endl;
+                    cout << "3. Exit" << endl;
+                    cin >> choice;
+                    if (choice == 1) {
+
+                    }
+                    else if (choice == 2) {
+                        warehouse.search();
+                        choice = 0;
+                        cout << "1. Add Product" << endl;
+                        cout << "3. Exit" << endl;
+                        cin >> choice;
+                        if (choice == 1) {
+                            cout << "Choose product, wchich you wanna add to the Cart:" << endl;
+                            cin >> product_name;
+                            cart.buy(product_name);
+                        }
+
+                    }
                 }
                 else {
                     cout << "Data incorect" << endl;
