@@ -129,7 +129,7 @@ public:
         product = p;
     }
 
-    void add(string product_name) {
+    virtual void add() override {
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -762,7 +762,7 @@ int main() {
                             cout << endl;
                             Product product(price, quantity, product_name, category_name);
                             warehouse.set(product);
-                            warehouse.add(product_name);
+                            warehouse.add();
                             pause_program();
                         }
                         break;
@@ -834,8 +834,10 @@ int main() {
         }
         else if (choice != 1 && choice != 2) {
             cout << "Choose 1, 2, or 3" << endl;
-            cin >> choice;
+            break;
+            
         }
     } while (choice != 3);
     return 0;
+
 }
