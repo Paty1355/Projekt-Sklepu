@@ -288,25 +288,6 @@ public:
 
 };
 
-int selectCartId(string product_name) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    char* zErrMsg = 0;
-    int rc;
-    string sqlCartId;
-    int id;
-
-    rc = sqlite3_open("shop.db", &db);
-    sqlCartId = "SELECT id FROM cart WHERE nameProduct ='" + product_name + "';";
-
-    rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        id = sqlite3_column_int(stmt, 0);
-    }
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
-    return id;
-}
 
 class Cart :public Product {
     friend class Client;
@@ -436,8 +417,7 @@ public:
 
         if (quantity >= 1) {
             for (int i = 0;i < 20;i++) {
-                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName=" + product + "; "
-                    "SELECT * from COMPANY";
+                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName='" + product + "'; ";
                 rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
             }
             if (rc != SQLITE_OK) {
@@ -489,6 +469,26 @@ public:
 
 };
 
+int selectCartId() {
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    char* zErrMsg = 0;
+    int rc;
+    string sqlCartId;
+    int id;
+
+    rc = sqlite3_open("shop.db", &db);
+    sqlCartId = "SELECT * FROM cart ORDER BY id DESC LIMIT 1;";
+
+    rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        id = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return id;
+}
+
 class Client :public Abstract {
     //int clientId, cartId;
     string clientLogin, clientPassword;
@@ -510,6 +510,7 @@ public:
         int rc;
         string table_sql, insert_sql;
         const char* data = "Callback function called";
+        int cartId;
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -531,7 +532,7 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword) VALUES ('" + clientLogin + "' , '" + clientPassword+ "');";
+        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "'," + to_string(selectCartId()) +");";
        // insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cart.cartId) + "');";
         //insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
