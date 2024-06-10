@@ -27,8 +27,9 @@ public:
 
 class Category :public Abstract {
 protected:
-    string categoryName;
+    
 public:
+    string categoryName;
     Category() {};
     Category(string name) :
         categoryName(name) {};
@@ -103,13 +104,13 @@ public:
 
 class Product : public Category {
     friend class Cart;
+    friend class Warehouse;
 protected:
     int price;
     int quantity;
     string productName;
-
 public:
-    Product(): productName(""), price(0), quantity(0) {};
+    Product() {};
     Product(int priceP, int quantityP, string nameP, string nameC) :
         price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {} //Category(nameC)
 };
@@ -121,6 +122,7 @@ class Warehouse : public Product {
 protected:
     Product product;
 public:
+   
 
     Warehouse(const Product& p) : product(p) {};
     Warehouse() {};
@@ -157,7 +159,7 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO warehouse (productName, price, productCategory, quantity) VALUES ('" + productName + "' ," + to_string(price) + ", '" + categoryName + "' ," + to_string(quantity) + ");";
+        insert_sql = "INSERT OR IGNORE INTO warehouse (productName, price, productCategory, quantity) VALUES ('" + product.productName + "' ," + to_string(product.price) + ", '" + product.categoryName + "' ," + to_string(product.quantity) + ");";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
