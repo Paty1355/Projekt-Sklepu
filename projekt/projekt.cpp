@@ -700,15 +700,10 @@ int choose_option() {
 }
 static int idCart = 1;
 
-int main(int argc, char* argv[]) {
-    static int count_person = 1;
-    string searched_item;
-    Warehouse warehouse();
-
 
 int main() {
     int choice = 0;
-    string password, category_name, product_name;
+    string password, category_name, product_name, login;
     double price;
     int quantity;
     char answer;
@@ -797,7 +792,6 @@ int main() {
             }
         }
         else if (choice == 2) {
-            string login;
             cout << "User login: " << endl;
             cin >> login;
             cout << "User password: " << endl;
@@ -813,54 +807,30 @@ int main() {
             // Process user login here...
             cout << "User logged in successfully." << endl;
             pause_program();
+
+            choice = 0;
+            cout << "1. Register" << endl;
+            cout << "2. Login" << endl;
+            cin >> choice;
+            cout << "User login: " << endl;
+            cin >> login;
+            cout << "User password: " << endl;
+            cin >> password;
+            if (choice == 1) {
+                Client klient(1, idCart, login, password);
+                klient.add();
+                idCart++;
+            }
+            else {
+                Client klient(1, idCart, login, password);
+                klient.checkData();
+            }
+
         }
         else if (choice != 1 && choice != 2) {
             cout << "Choose 1, 2, or 3" << endl;
             cin >> choice;
         }
     } while (choice != 3);
-    }
-    if (choice == 1) {
-        cout << "Admin password: " << endl;
-        cin >> password;
-        if (password == "admin") {
-            choice = 0;
-            cout << "Login successfully" << endl;
-            cout << "1. Add category" << endl;
-            cout << "2. Add product to warehouse" << endl;
-            cout << "3. Menu" << endl;
-            while (choice != 1 && choice != 2 && choice != 3) {
-                cout << "Choose 1 or 2 or 3" << endl;
-                cin >> choice;
-            }
-            //dodawanie
-            //dodawanie produktów do magazynu
-        }
-    }
-    else {
-        choice = 0;
-        cout << "1. Register" << endl;
-        cout << "2. Login" << endl;
-        cin >> choice;
-        cout << "User login: " << endl;
-        cin >> login;
-        cout << "User password: " << endl;
-        cin >> password;
-        if (choice == 1) {
-            Client klient(1, idCart, login, password);
-            klient.add();
-            idCart++;
-        }
-        else {
-            Client klient(1, idCart, login, password);
-            klient.checkData();
-        }
-        
-
-        //wyswietlenie produktów z magazynu
-    }
-    
-
-
     return 0;
 }
