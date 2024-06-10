@@ -252,18 +252,28 @@ public:
 
 };
 
-class Cart :public Abstract {
-    int cartId;
-    int idProducts[20];
+class Cart :public Product {
+    //int cartId;
+   // int cartProducts[20][2];
+protected:
+    Product product;
 public:
     Cart() {};
-    Cart(int id, int products[20]) :
-        cartId(id) {
-        for (int i = 0; i < 20; i++) {
-            idProducts[i] = products[i];
-        }
+    Cart(const Product& p, int id) : product(p) {};
+
+    void setValue(const Product& p) {
+        product = p;
+      //  cartId = id;
     }
 
+    /*void setValue(int id, int products[20][2]) {
+        cartId = id;
+        for (int i = 0;i < 20;i++) {
+            for (int j = 0;j < 2;j++) {
+                cartProducts[i][j] = products[i][j];
+            }
+        }
+    }*/
     virtual void add() override {
         sqlite3* db;
         char* zErrMsg = 0;
@@ -279,8 +289,9 @@ public:
         /* Creating Tables*/
         table_sql = "CREATE TABLE IF NOT EXISTS cart("
             "id INTEGER PRIMARY KEY,"
-            "idProduct INTEGER,"
-            "FOREIGN KEY (idProduct) REFERENCES warehouse(id));";
+            "nameProduct INTEGER,"
+            "quantityProduct INTEGER"
+            "FOREIGN KEY (nameProduct) REFERENCES warehouse(productName));";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -289,15 +300,16 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        for (int i = 0;i < 20;i++) {
-            insert_sql = "INSERT OR IGNORE INTO cart (idProduct) VALUES ('" + to_string(idProducts[i]) + "');";
-            rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
-        }
-       
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-        }
+        /*for (int i = 0;i < 20;i++) {
+                insert_sql = "INSERT OR IGNORE INTO cart (idProduct, quantityProduct) VALUES ('" + to_string(cartProducts[i][0]) + "' '" + to_string(cartProducts[i][1]) + "');";
+                rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+            if (rc != SQLITE_OK) {
+                break;
+            }
+        }*/
+        insert_sql = "INSERT OR IGNORE INTO cart (idProduct, quantityProduct) VALUES ('" + product.productName + "' '" + to_string(product.quantity) + "');";
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+
         sqlite3_close(db);
     }
     virtual void remove() override {
@@ -314,7 +326,7 @@ public:
 
         /* Creating Tables*/
         remove_sql = "DELETE FROM cart "
-            "WHERE id='" + to_string(cartId) + "' ";
+            "WHERE nameProduct='" + product.productName + "' ";
 
         rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -336,7 +348,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT productName,price,quantity,productCategory FROM warehouse";
+        search_sql = "SELECT warehouse.productName, cart.quantityProduct FROM warehouse INNER JOIN cart ON warehouse.id = cart.id";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -345,7 +357,7 @@ public:
         }
         sqlite3_close(db);
     }
-    void buy(string product) {
+    void updateWarehouse(string product) {
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -365,15 +377,22 @@ public:
         }
         sqlite3_finalize(stmt);
 
-        for (int i = 0;i < 20;i++) {
-            sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName=" + product + "; " \
-                "SELECT * from COMPANY";
-            rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
+        if (quantity >= 1) {
+            for (int i = 0;i < 20;i++) {
+                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName=" + product + "; "
+                    "SELECT * from COMPANY";
+                rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
+            }
+            if (rc != SQLITE_OK) {
+                fprintf(stderr, "SQL error: %s\n", zErrMsg);
+                sqlite3_free(zErrMsg);
+            }
         }
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
+        else {
+            cout << "No products in warehouse" << endl;
         }
+
+       
         sqlite3_close(db);
     }
 
@@ -719,9 +738,109 @@ int choose_option() {
 }
 static int idCart = 3;
 
+Cart cart;
+
+void addToCart() {
+    string product_name;
+    int number;
+    cout << "Choose product, wchich you wanna add to the Cart:" << endl; //coś nie gra z produktu dodawaniem i tu cos sie psuje tez, moze baze ejszcze raz?
+    cin >> product_name;
+    cout << "How many: " << endl;
+    cin >> number;
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    char* zErrMsg = 0;
+    int rc;
+    string sqlQuantity, sqlProductCategory, sqlPrice, sqlId, category;
+    int quantity, price;
+
+    rc = sqlite3_open("shop.db", &db);
+
+    if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+    sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
+    sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
+    sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
+
+    rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        quantity = sqlite3_column_int(stmt, 0);
+    }
+    rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    }
+
+    rc = sqlite3_prepare_v2(db, sqlPrice.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        price = sqlite3_column_int(stmt, 0);
+    }
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    else {
+        Product product(price, quantity, product_name, category);
+        cart.setValue(product);
+        cart.add();
+        cart.updateWarehouse(product_name);
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
+void deleteFromCart() {
+    string product_name;
+    int number;
+    cout << "Choose product, wchich you wanna delete from the Cart:" << endl; //coś nie gra z produktu dodawaniem i tu cos sie psuje tez, moze baze ejszcze raz?
+    cin >> product_name;
+    cout << "How many: " << endl;
+    cin >> number;
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    char* zErrMsg = 0;
+    int rc;
+    string sqlQuantity, sqlProductCategory, sqlPrice, sqlId, category;
+    int quantity, price;
+
+    rc = sqlite3_open("shop.db", &db);
+
+    if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+    sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
+    sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
+    sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
+
+    rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        quantity = sqlite3_column_int(stmt, 0);
+    }
+    rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+    }
+
+    rc = sqlite3_prepare_v2(db, sqlPrice.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        price = sqlite3_column_int(stmt, 0);
+    }
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+    else {
+        Product product(price, quantity, product_name, category);
+        cart.setValue(product);
+        cart.remove();
+        //  cart.updateWarehouse(product_name); - powinien sie dodac w magazynie, moze pozniej
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+}
 
 int main() {
-    int choice = 0, loginSuccessfuly = 0;
+    int choice = 0, loginSuccessfuly = 0,number;
     string password, category_name, product_name, login;
     double price;
     int quantity;
@@ -729,7 +848,6 @@ int main() {
 
     Warehouse warehouse;
     Client klient;
-    Cart cart;
 
     do {
         cout << "-------------------MENU---------------------" << endl;
@@ -846,9 +964,10 @@ int main() {
                     cout << "1. Check Cart" << endl;
                     cout << "2. Search Product" << endl;
                     cout << "3. Exit" << endl;
+                    cout << "4. Delete Product" << endl;
                     cin >> choice;
                     if (choice == 1) {
-
+                        cart.search();
                     }
                     else if (choice == 2) {
                         warehouse.search();
@@ -857,11 +976,21 @@ int main() {
                         cout << "3. Exit" << endl;
                         cin >> choice;
                         if (choice == 1) {
-                            cout << "Choose product, wchich you wanna add to the Cart:" << endl;
-                            cin >> product_name;
-                            cart.buy(product_name);
+                            addToCart();
+                            choice = 0;
+                            cout << "Are you wanna add more products t/n?" << endl;
+                            cin >> answer;
+                            if (answer == 't') {
+                                cout << "How many ?" << endl;
+                                cin >> choice;
+                                for (int i = 1;i <= choice;i++) {
+                                    addToCart();
+                                }
+                            }  
                         }
-
+                    }
+                    else if (choice == 4) {
+                        deleteFromCart();
                     }
                 }
                 else {
