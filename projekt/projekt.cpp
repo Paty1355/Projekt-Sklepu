@@ -369,8 +369,7 @@ public:
     Client(int idClient, int idCart, string login, string password) :
         clientId(idClient), cartId(idCart), clientLogin(login), clientPassword(password) {}
 
-    void setValue(int idClient, int idCart, string login, string password) {
-        clientId = idClient;
+    void setValue(int idCart, string login, string password) {
         cartId = idCart;
         clientLogin = login;
         clientPassword = password;
@@ -403,6 +402,7 @@ public:
             sqlite3_free(zErrMsg);
         }
 
+        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cartId)+ "');";
         insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -456,6 +456,27 @@ public:
             sqlite3_free(zErrMsg);
         }
         sqlite3_close(db);
+    }
+    bool checkData() {
+        sqlite3* db;
+        char* zErrMsg = 0;
+        int rc;
+        string sql;
+        rc = sqlite3_open("shop.db", &db);
+
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
+        sql = "SELECT * FROM client WHERE clientLogin ='" + clientLogin + "' AND clientPassword = '" + clientPassword + "';";
+        rc = sqlite3_exec(db, sql.c_str(), callback, 0, &zErrMsg);
+
+        cout << rc;
+
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        sqlite3_close(db);
+        return true;
     }
 };
 
@@ -677,6 +698,12 @@ int choose_option() {
     cin >> option;
     return option;
 }
+static int idCart = 1;
+
+int main(int argc, char* argv[]) {
+    static int count_person = 1;
+    string searched_item;
+    Warehouse warehouse();
 
 
 int main() {
@@ -792,6 +819,48 @@ int main() {
             cin >> choice;
         }
     } while (choice != 3);
+    }
+    if (choice == 1) {
+        cout << "Admin password: " << endl;
+        cin >> password;
+        if (password == "admin") {
+            choice = 0;
+            cout << "Login successfully" << endl;
+            cout << "1. Add category" << endl;
+            cout << "2. Add product to warehouse" << endl;
+            cout << "3. Menu" << endl;
+            while (choice != 1 && choice != 2 && choice != 3) {
+                cout << "Choose 1 or 2 or 3" << endl;
+                cin >> choice;
+            }
+            //dodawanie
+            //dodawanie produktów do magazynu
+        }
+    }
+    else {
+        choice = 0;
+        cout << "1. Register" << endl;
+        cout << "2. Login" << endl;
+        cin >> choice;
+        cout << "User login: " << endl;
+        cin >> login;
+        cout << "User password: " << endl;
+        cin >> password;
+        if (choice == 1) {
+            Client klient(1, idCart, login, password);
+            klient.add();
+            idCart++;
+        }
+        else {
+            Client klient(1, idCart, login, password);
+            klient.checkData();
+        }
+        
+
+        //wyswietlenie produktów z magazynu
+    }
+    
+
 
     return 0;
 }
