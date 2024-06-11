@@ -760,7 +760,32 @@ int main() {
         cout << "3. Exit" << endl;
         cin >> choice;
 
+        while (!(cin >> choice)) {
+            system("cls");
+            cout << "-------------------MENU---------------------" << endl;
+            cout << "1. Admin" << endl;
+            cout << "2. User" << endl;
+            cout << "3. Exit" << endl;
+            cin >> choice;
+            cout << "Invalid choice. Please select 1, 2 or 3: ";
+            cin.clear();
+            cin.ignore();
+        }
+
+        while (choice < 1 || choice > 3) {
+            system("cls");
+            cout << "-------------------MENU---------------------" << endl;
+            cout << "1. Admin" << endl;
+            cout << "2. User" << endl;
+            cout << "3. Exit" << endl;
+            cin >> choice;
+            if (choice < 1 || choice > 3) cout << "Invalid choice. Please select 1, 2 or 3: " << endl;
+            pause_program();
+        }
+
+
         if (choice == 1) {
+            system("cls");
             cout << "Admin password: " << endl;
 
             // Hide password input
@@ -777,6 +802,8 @@ int main() {
                 bool admin_running = true;
                 do {
                     system("cls");
+
+                    admin_running = false;
                     choice = choose_option();
                     switch (choice) {
                     case 1:
@@ -829,8 +856,9 @@ int main() {
                         break;
                     default:
                         cout << "Invalid choice. Please select a valid option." << endl;
-                        //admin_running = false;
-                        choose_option();
+                        admin_running = false;
+                        break;
+                       
                     }
                 } while (admin_running);
             }
@@ -839,8 +867,8 @@ int main() {
             }
         }
         else if (choice == 2) {
-            choice = 0;
-            system("CLS");
+            
+            system("cls");
             cout << "1. Register" << endl;
             cout << "2. Login" << endl;
             cout << "3. Exit" << endl;
@@ -912,11 +940,8 @@ int main() {
         else if (choice == 3) {
             break;
         }
-        else if (choice != 1 && choice != 2 && choice !=3) {
-            cout << "Choose 1, 2, or 3" << endl;
-            cin >> choice;
-            system("pause");
-
+        else {
+            continue;
         }
     } while (choice != 3);
     return 0;
