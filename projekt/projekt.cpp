@@ -352,7 +352,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string sqlQuantity, sqlUpdate;
-        int quantity;
+        int quantity=0;
 
         rc = sqlite3_open("shop.db", &db);
 
@@ -388,7 +388,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string sqlQuantity, sqlUpdate;
-        int quantity;
+        int quantity=0;
 
         rc = sqlite3_open("shop.db", &db);
 
@@ -478,7 +478,6 @@ public:
         int rc;
         string table_sql, insert_sql;
         const char* data = "Callback function called";
-        int cartId;
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -600,7 +599,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string sqlProductCategory, sqlPrice, sqlId, category, sqlCartTable;
-        int price;
+        int price=0;
 
         rc = sqlite3_open("shop.db", &db);
 
@@ -644,7 +643,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string sqlProductCategory, sqlPrice, sqlId, category;
-        int quantity, price;
+        int quantity=0, price=0;
 
         rc = sqlite3_open("shop.db", &db);
 
