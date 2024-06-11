@@ -752,7 +752,7 @@ int main() {
         cout << "3. Exit" << endl;
         cin >> choice;
 
-        while (!(cin >> choice) || choice < 1 || choice > 3) {
+        while (!(cin >> choice)) {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
@@ -763,6 +763,18 @@ int main() {
             cin.clear();
             cin.ignore();
         }
+
+        while (choice < 1 || choice > 3) {
+            system("cls");
+            cout << "-------------------MENU---------------------" << endl;
+            cout << "1. Admin" << endl;
+            cout << "2. User" << endl;
+            cout << "3. Exit" << endl;
+            cin >> choice;
+            if (choice < 1 || choice > 3) cout << "Invalid choice. Please select 1, 2 or 3: " << endl;
+            pause_program();
+        }
+
 
         if (choice == 1) {
             system("cls");
@@ -847,8 +859,8 @@ int main() {
             }
         }
         else if (choice == 2) {
-            choice = 0;
-            system("CLS");
+            
+            system("cls");
             cout << "1. Register" << endl;
             cout << "2. Login" << endl;
             cout << "3. Exit" << endl;
@@ -921,7 +933,7 @@ int main() {
             break;
         }
         else {
-            cout << "Choose 1, 2 or 3" << endl;
+            continue;
         }
     } while (choice != 3);
     return 0;
