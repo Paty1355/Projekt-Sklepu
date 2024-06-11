@@ -288,29 +288,10 @@ public:
 
 };
 
-int selectCartId(string product_name) {
-    sqlite3* db;
-    sqlite3_stmt* stmt;
-    char* zErrMsg = 0;
-    int rc;
-    string sqlCartId;
-    int id;
-
-    rc = sqlite3_open("shop.db", &db);
-    sqlCartId = "SELECT id FROM cart WHERE nameProduct ='" + product_name + "';";
-
-    rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
-    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-        id = sqlite3_column_int(stmt, 0);
-    }
-    sqlite3_finalize(stmt);
-    sqlite3_close(db);
-    return id;
-}
 
 class Cart :public Product {
     friend class Client;
-    int cartId;
+   // int cartId;
    // int cartProducts[20][2];
 protected:
     Product product;
@@ -320,7 +301,7 @@ public:
 
     void setValue(const Product& p) {
         product = p;
-        cartId = selectCartId(product.productName);
+       // cartId = selectCartId(product.productName);
     }
 
     /*void setValue(int id, int products[20][2]) {
@@ -346,8 +327,8 @@ public:
         /* Creating Tables*/
         table_sql = "CREATE TABLE IF NOT EXISTS cart("
             "id INTEGER PRIMARY KEY,"
-            "nameProduct INTEGER,"
-            "quantityProduct INTEGER"
+            "nameProduct TEXT,"
+            "quantityProduct INTEGER,"
             "FOREIGN KEY (nameProduct) REFERENCES warehouse(productName));";
 
         rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
@@ -364,7 +345,7 @@ public:
                 break;
             }
         }*/
-        insert_sql = "INSERT OR IGNORE INTO cart (idProduct, quantityProduct) VALUES ('" + product.productName + "' '" + to_string(product.quantity) + "');";
+        insert_sql = "INSERT OR IGNORE INTO cart (nameProduct, quantityProduct) VALUES ('" + product.productName + "', '" + to_string(product.quantity) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         sqlite3_close(db);
@@ -405,7 +386,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT warehouse.productName, cart.quantityProduct FROM warehouse INNER JOIN cart ON warehouse.id = cart.id";
+        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -436,8 +417,7 @@ public:
 
         if (quantity >= 1) {
             for (int i = 0;i < 20;i++) {
-                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName=" + product + "; "
-                    "SELECT * from COMPANY";
+                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - 1) + " where productName='" + product + "'; ";
                 rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
             }
             if (rc != SQLITE_OK) {
@@ -489,6 +469,26 @@ public:
 
 };
 
+int selectCartId() {
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    char* zErrMsg = 0;
+    int rc;
+    string sqlCartId;
+    int id;
+
+    rc = sqlite3_open("shop.db", &db);
+    sqlCartId = "SELECT * FROM cart ORDER BY id DESC LIMIT 1;";
+
+    rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        id = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return id;
+}
+
 class Client :public Abstract {
     //int clientId, cartId;
     string clientLogin, clientPassword;
@@ -510,6 +510,7 @@ public:
         int rc;
         string table_sql, insert_sql;
         const char* data = "Callback function called";
+        int cartId;
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -531,7 +532,8 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "' , '" +to_string(cart.cartId)+ "');";
+        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword+ "'," + to_string(selectCartId()) +");";
+       // insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cart.cartId) + "');";
         //insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES ('" + to_string(clientId) + "' ,'" + clientLogin + "' , '" + clientPassword + "' , '" + to_string(cartId) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -577,7 +579,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT * FROM client";
+        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -652,6 +654,9 @@ void addToCart() {
 
     if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
+    cout << product_name << endl;
+
+
     sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
     sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
     sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
@@ -660,6 +665,7 @@ void addToCart() {
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         quantity = sqlite3_column_int(stmt, 0);
     }
+
     rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
@@ -670,16 +676,11 @@ void addToCart() {
         price = sqlite3_column_int(stmt, 0);
     }
 
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-    }
-    else {
-        Product product(price, quantity, product_name, category);
-        cart.setValue(product);
-        cart.add();
-        cart.updateWarehouseAddCart(product_name);
-    }
+    Product product(price, quantity, product_name, category);
+    cart.setValue(product);
+    cart.add();
+    cart.updateWarehouseAddCart(product_name);
+    
     sqlite3_finalize(stmt);
     sqlite3_close(db);
 }
@@ -852,6 +853,7 @@ int main() {
             cout << "2. Login" << endl;
             cout << "3. Exit" << endl;
             cin >> choice;
+            cart.add();
 
             cout << "User login: " << endl;
             cin >> login;
@@ -882,7 +884,7 @@ int main() {
                     cout << "4. Delete Product" << endl;
                     cin >> choice;
                     if (choice == 1) {
-                        cart.search();
+                        klient.search();
                     }
                     else if (choice == 2) {
                         warehouse.search();
