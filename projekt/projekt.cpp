@@ -707,17 +707,17 @@ int main() {
         cout << "9. Exit" << endl;
         cin >> choice;
 
-      /*  while (!(cin >> choice)) {
+        while (!(cin >> choice)) {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
             cout << "2. User" << endl;
-            cout << "3. Exit" << endl;
+            cout << "9. Exit" << endl;
             cin >> choice;
-            cout << "Invalid choice. Please select 1, 2 or 3: ";
+            cout << "Invalid choice. Please select 1, 2 or 9: ";
             cin.clear();
             cin.ignore();
-        }*/
+        }
 
         while (choice != 9 && choice != 2 && choice != 1) {
             system("cls");
@@ -750,7 +750,7 @@ int main() {
                 do {
                     system("cls");
 
-                    admin_running = false;
+                    //admin_running = false;
                     choice = choose_option();
                     switch (choice) {
                     case 1:
@@ -803,7 +803,6 @@ int main() {
                         break;
                     default:
                         cout << "Invalid choice. Please select a valid option." << endl;
-                        admin_running = false;
                         break;
                        
                     }
@@ -811,6 +810,7 @@ int main() {
             }
             else {
                 cout << "Incorrect password." << endl;
+                choice = 1;
             }
         }
         else if (choice == 2) {
