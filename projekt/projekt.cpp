@@ -678,8 +678,8 @@ void pause_program() {
     cin.get(); //wait for enter key
 }
 
-int choose_option() {
-    int option;
+char choose_option() {
+    char option;
     cout << "1. Add category and product" << endl;
     cout << "2. Delete product" << endl;
     cout << "3. Check product quantity" << endl;
@@ -690,7 +690,8 @@ int choose_option() {
 }
 
 int main() {
-    int choice = 0, loginSuccessfuly = 0;
+    int loginSuccessfuly = 0;
+    char choice = '0';
     string password, category_name, product_name, login;
     double price;
     int quantity;
@@ -707,7 +708,7 @@ int main() {
         cout << "9. Exit" << endl;
         cin >> choice;
 
-        while (!(cin >> choice)) {
+    /*    while (!(cin >> choice)) {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
@@ -717,21 +718,20 @@ int main() {
             cout << "Invalid choice. Please select 1, 2 or 9: ";
             cin.clear();
             cin.ignore();
-        }
+        }*/
 
-        while (choice != 9 && choice != 2 && choice != 1) {
+        while (choice != '9' && choice != '2' && choice != '1') {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
             cout << "2. User" << endl;
             cout << "9. Exit" << endl;
             cin >> choice;
-            if (choice != 9 && choice !=2 && choice !=1) cout << "Invalid choice. Please select 1, 2 or 9: " << endl;
+            if (choice != '9' && choice !='2' && choice !='1') cout << "Invalid choice. Please select 1, 2 or 9: " << endl;
             pause_program();
         }
 
-
-        if (choice == 1) {
+        if (choice == '1') {
             system("cls");
             cout << "Admin password: " << endl;
 
@@ -749,11 +749,10 @@ int main() {
                 bool admin_running = true;
                 do {
                     system("cls");
-
                     //admin_running = false;
                     choice = choose_option();
                     switch (choice) {
-                    case 1:
+                    case '1':
                         cout << "Enter category name: " << endl;
                         cin >> category_name;
                         {
@@ -780,7 +779,7 @@ int main() {
                             pause_program();
                         }
                         break;
-                    case 2:
+                    case '2':
                         cout << "Enter the name of the product that you want to delete:" << endl;
                         cin >> product_name;
                         //Product product1(price, quantity, product_name, category_name);
@@ -788,17 +787,17 @@ int main() {
                         warehouse.removeP(product_name);
                         pause_program();
                         break;
-                    case 3:
+                    case '3':
                         cout << "What product do you want to find information about?" << endl;
                         cin >> product_name;
                         warehouse.checkQuantity(product_name);
                         pause_program();
                         break;
-                    case 4:
+                    case '4':
                         warehouse.search();
                         pause_program();
                         break;
-                    case 5:
+                    case '5':
                         admin_running = false;
                         break;
                     default:
@@ -810,10 +809,10 @@ int main() {
             }
             else {
                 cout << "Incorrect password." << endl;
-                choice = 1;
+                choice = '1';
             }
         }
-        else if (choice == 2) {
+        else if (choice == '2') {
             do {
             userRunning = true;
             system("cls");
@@ -821,12 +820,12 @@ int main() {
             cout << "2. Login" << endl;
             cout << "9. Exit" << endl;
             cin >> choice;
-            while (choice != 1 && choice != 2 && choice != 9) {
+            while (choice != '1' && choice != '2' && choice != '9') {
                 cout << "Invalid choice. Please select 1, 2 or 9:" << endl;
                 cin >> choice;
             }
-            if (choice == 9) { 
-                choice = 0;
+            if (choice == '9') { 
+                choice = '0';
                 userRunning = false;
                 system("cls");
                 continue;
@@ -842,13 +841,13 @@ int main() {
             SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
             cin >> password;
             SetConsoleMode(hStdin, mode);
-                if (choice == 1) {
+                if (choice == '1') {
                     klient.setValue(login, password);
                     klient.add();
                     cout << "Register Successfuly, Login" << endl;
                     pause_program();
                 }
-                else if (choice == 2) {
+                else if (choice == '2') {
                     klient.setValue(login, password);
                     loginSuccessfuly = klient.checkData();
                     userOptionRunning = true;
@@ -859,26 +858,26 @@ int main() {
                             cout << "3. Delete Product" << endl;
                             cout << "9. Exit" << endl;
                             cin >> choice;
-                            while (choice != 1 && choice != 2 && choice!=3 && choice != 9) {
+                            while (choice != '1' && choice != '2' && choice!='3' && choice != '9') {
                                 cout << "Invalid choice. Please select 1, 2, 3 or 9:" << endl;
                                 cin >> choice;
                             }
-                            if (choice != 9) {
-                                if (choice == 1) {
+                            if (choice != '9') {
+                                if (choice == '1') {
                                     klient.search();
                                 }
-                                else if (choice == 2) {
+                                else if (choice == '2') {
                                     warehouse.search();
                                     cout << "1. Add Product" << endl;
                                     cout << "9. Exit" << endl;
                                     cin >> choice;
-                                    while (choice != 1 && choice != 9) {
+                                    while (choice != '1' && choice != '9') {
                                         cout << "Invalid choice. Please select 1 or 9:" << endl;
                                         cin >> choice;
                                     }
-                                    if (choice == 1) {
+                                    if (choice == '1') {
                                         klient.addToCart();
-                                        choice = 0;
+                                        choice = '0';
                                         cout << "Are you wanna add more products t/n?" << endl;
                                         cin >> answer;
                                         while (answer != 't' && answer != 'n') {
@@ -893,21 +892,21 @@ int main() {
                                             }
                                         }
                                     }
-                                    else if(choice == 9) {
-                                        choice = 0;
+                                    else if(choice == '9') {
+                                        choice = '0';
                                         system("cls");
                                     }
                                 }
-                                else if (choice == 3) {
+                                else if (choice == '3') {
                                     klient.search();
                                     cout << "1. Delete Product" << endl;
                                     cout << "9. Exit" << endl;
                                     cin >> choice;
-                                    while (choice != 1 && choice != 9) {
+                                    while (choice != '1' && choice != '9') {
                                         cout << "Invalid choice. Please select 1 or 9:" << endl;
                                         cin >> choice;
                                     }
-                                    if (choice == 1) {
+                                    if (choice == '1') {
                                         klient.deleteFromCart();
                                         cin >> choice;
                                         cout << "Are you wanna add delete more products t/n?" << endl;
@@ -919,13 +918,13 @@ int main() {
                                         if (answer == 't') {
                                             cout << "How many ?" << endl;
                                             cin >> choice;
-                                            for (int i = 1;i <= choice;i++) {
+                                            for (int i = 1;i <= int(choice);i++) {
                                                 klient.deleteFromCart();
                                             }
                                         }
                                     }
-                                    else if (choice == 9) {
-                                        choice = 0;
+                                    else if (choice == '9') {
+                                        choice = '0';
                                         system("cls");
                                     }
                                 }
@@ -938,18 +937,18 @@ int main() {
                 }
                 else {
                     cout << "Data incorect" << endl;
-                    choice = 0;
+                    choice = '0';
                     userRunning = false;
                 }  
             } while (userRunning);
         }
-        else if (choice == 9) {
+        else if (choice == '9') {
             break;
         }
         else {
             continue;
         }
-    } while (choice != 9 && choice != 2 && choice != 1);
+    } while (choice != '9' && choice != '2' && choice != '1');
     return 0;
 
 }
