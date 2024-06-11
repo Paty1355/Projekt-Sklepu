@@ -1,4 +1,4 @@
-﻿#include <iostream>
+﻿#include <iostream> 
 #include <string>
 #include <stdlib.h>
 #include <cstdio>
@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static int callback(void* NotUsed, int argc, char** argv, char** azColName) {
+static int callback(void* NotUsed, int argc, char** argv, char** azColName) { //Funkcja używana do wypisania zawartości danego zapytania z bazy danych na ekran
     int i;
     for (i = 0; i < argc; i++) {
         printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
@@ -18,82 +18,74 @@ static int callback(void* NotUsed, int argc, char** argv, char** azColName) {
     return 0;
 }
 
-class Abstract {
+class Abstract { //Klasa abstrakcyjna
 public:
-    virtual void add() = 0;
-    virtual void remove() = 0;
-    virtual void search() = 0;
+    virtual void add() = 0; //Metoda dodawania rekordów do bazy danych
+    virtual void remove() = 0; //Metoda usuwania rekordów do bazy danych
+    virtual void search() = 0; //Metoda przeszukiwania rekordów do bazy danych
 };
 
-class Category :public Abstract {
-protected:
-    
+class Category :public Abstract { //klasa Kategorii produktów, dziedziczy publicznie po klasie abstrakcyjnej
 public:
-    string categoryName;
-    Category() {};
-    Category(string name) :
+    string categoryName; //nazwa kategorii
+    Category() {}; //konstruktor domyślny
+    Category(string name) : //konstruktor parametryczny
         categoryName(name) {};
 
-    virtual void add() override {
-        sqlite3* db;
-        char* zErrMsg = 0;
+    virtual void add() override { //Metoda przeciążona - dodawanie rekordów do bazy danych
+        sqlite3* db; //tworzenie bazy
+        char* zErrMsg = 0; //komunikat błędu
         int rc;
-        string table_sql, insert_sql;
+        string table_sql, insert_sql; //zapytania do bazy danych
 
-        /* Open database */
-        rc = sqlite3_open("shop.db", &db);
+        rc = sqlite3_open("shop.db", &db); //otworzenie bazy danych
 
-        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db)); //sprawdzanie czy baza została poprawnie otworzona
 
-        /* Creating Tables*/
-        table_sql = "CREATE TABLE IF NOT EXISTS categories("
+        table_sql = "CREATE TABLE IF NOT EXISTS categories(" //zapytanie tworzenia tabeli
             "id INTEGER PRIMARY KEY,"
             "categoryName TEXT NOT NULL UNIQUE);";
 
-        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg);
+        rc = sqlite3_exec(db, table_sql.c_str(), callback, 0, &zErrMsg); //wykonanie zapytania tworzenia tabeli
 
-        if (rc != SQLITE_OK) {
+        if (rc != SQLITE_OK) { //sprawdzenie czy zapytanie wykonało się poprawnie
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
 
-        insert_sql = "INSERT OR IGNORE INTO categories (categoryName) VALUES ('" + categoryName + "');";
-        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
+        insert_sql = "INSERT OR IGNORE INTO categories (categoryName) VALUES ('" + categoryName + "');"; //zapytanie dodania rekordów do tabeli
+        rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg); //wykonanie zapytania
 
-        if (rc != SQLITE_OK) {
+        if (rc != SQLITE_OK) {//sprawdzenie czy zapytanie wykonało się poprawnie
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
 
-        sqlite3_close(db);
+        sqlite3_close(db); //zamknięcie bazy danych
     }
 
-    virtual void remove() override {
+    virtual void remove() override { //Metoda przeciążona - usuwanie rekordów z bazy danych
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
         string remove_sql, select_sql;
-        const char* data = "Callback function called"; //zastanow sie nad tym
+        const char* data = "Callback function called"; 
 
-        /* Open database */
         rc = sqlite3_open("shop.db", &db);
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        /* Creating Tables*/
-        remove_sql = "DELETE FROM categories "
+        remove_sql = "DELETE FROM categories " //zapytanie usuwania rekordu
             "WHERE categoryName='" + categoryName + "' ";
 
-        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
+        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg); //wykonanie zapytania
 
         if (rc != SQLITE_OK) {
             fprintf(stderr, "SQL error: %s\n", zErrMsg);
             sqlite3_free(zErrMsg);
         }
-        /* Create SQL statement */
         select_sql = "SELECT * from categories";
 
-        /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
         sqlite3_close(db);
     }
@@ -102,7 +94,7 @@ public:
 };
 
 class Product : public Category {
-    friend class Cart;
+    friend class Cart; //
     friend class Warehouse;
 protected:
     int price;
@@ -253,7 +245,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT * FROM warehouse";
+        search_sql = "SELECT productName, price, quantity, productCategory FROM warehouse;";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -286,23 +278,20 @@ public:
 
 };
 
-
-class Cart :public Product {
-    friend class Client;
-    int cartId;
-protected:
-    Product product;
+class Cart :public Product { //klasa koszyk dziedzicząca po produkcie
+    friend class Client; //zadeklarowanie przyjaźni z klasa Client
+    int cartId; //id koszyka
+    Product product;//tworzenie obiektu produktu
 public:
-    Cart(){};
-    Cart(const Product& p, int id) : product(p) {};
+    Cart(){}; //konstruktor domyślny
 
-    void setValueProduct(const Product& p) {
+    void setValueProduct(const Product& p) {//Zapisywanie wartości produktu
         product = p;
     }
-    void setCartId(int id) {
+    void setCartId(int id) {//Zapisywanie wartości koszyka
         cartId = id;
     }
-    virtual void add() override {
+    virtual void add() override { 
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -355,28 +344,9 @@ public:
         sqlite3_close(db);
     }
 
-    virtual void search() override {
-        sqlite3* db;
-        char* zErrMsg = 0;
-        int rc;
-        string table_sql, search_sql;
+    virtual void search() override {}
 
-        /* Open database */
-        rc = sqlite3_open("shop.db", &db);
-
-        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-
-        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
-        rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-        }
-        sqlite3_close(db);
-    } //chyba niepotrzebne
-
-    void updateWarehouseAddCart(string product, int number) {
+    void updateWarehouseAddCart(string product, int number) { //Funkcja aktualizująca stan magazynu
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -389,10 +359,10 @@ public:
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
         sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product + "';";
-        rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
+        rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr); //Przygotowanie zapytania
 
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
-            quantity = sqlite3_column_int(stmt, 0);
+            quantity = sqlite3_column_int(stmt, 0);//zapisanie wartości zwróconej przez zapytanie do zmiennej quantity
         }
         sqlite3_finalize(stmt);
 
@@ -451,7 +421,7 @@ public:
 
 };
 
-int checkCartId(string login) {
+int checkCartId(string login) {//Funkcja zwracająca id koszyka klienta
     sqlite3* db;
     sqlite3_stmt* stmt;
     char* zErrMsg = 0;
@@ -471,7 +441,7 @@ int checkCartId(string login) {
     return id;
 }
 
-int selectNewCartId() {
+int selectNewCartId() {//funkcja zwracająca kolejne w kolejności id koszyka z bazy danych
     sqlite3* db;
     sqlite3_stmt* stmt;
     char* zErrMsg = 0;
@@ -491,21 +461,18 @@ int selectNewCartId() {
     return id + 1;
 }
 
-class Client :public Abstract {
-    string clientLogin, clientPassword;
-protected:
-    Cart cart;
+class Client :public Abstract { //klasa Client dziedzicząca po klasie Abstrakcyjnej
+    string clientLogin, clientPassword; //login, hasło klienta
+    Cart cart; //Tworzenie obiektu Koszyk
 public:
-    Client() {};
-    Client(string login, string password) :
-        clientLogin(login), clientPassword(password) {}
+    Client() {}; //konstruktor domyślny
 
-    void setValue(string login, string password) {
+    void setValue(string login, string password) {//Ustawanie wartości loginu oraz hasła obiektu
         clientLogin = login;
         clientPassword = password;
-    }
+    } 
     virtual void add() override {
-        cart.setCartId(selectNewCartId());
+        cart.setCartId(selectNewCartId()); //ustawienie wartości id koszyka
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -590,7 +557,7 @@ public:
         sqlite3_close(db);
     }
 
-    bool checkData() {
+    bool checkData() { //Metoda sprawdzająca poprawność wprowadzonych danych logowania
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -621,7 +588,7 @@ public:
         return false;
     }
 
-    void addToCart() {
+    void addToCart() {//Metoda odpowiadająca za dodawanie produktów do koszyka
         string product_name;
         int number;
         cout << "Choose product, wchich you wanna add to the Cart:" << endl; 
@@ -646,20 +613,20 @@ public:
         sqlCartTable = "CREATE TABLE IF NOT EXISTS cartId("
             "id INTEGER PRIMARY KEY";
 
-        rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
-        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr); 
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) { //pobranie danych o produkcie z bazy danych
             category = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
         }
 
-        rc = sqlite3_prepare_v2(db, sqlPrice.c_str(), -1, &stmt, nullptr);
-        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        rc = sqlite3_prepare_v2(db, sqlPrice.c_str(), -1, &stmt, nullptr); 
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) { //pobranie danych o produkcie z bazy danych
             price = sqlite3_column_int(stmt, 0);
         }
 
-        Product product(price, number, product_name, category);
-        cart.setValueProduct(product); 
-        cart.add();
-        cart.updateWarehouseAddCart(product_name, number);
+        Product product(price, number, product_name, category); //Utworzenie produktu
+        cart.setValueProduct(product); //ustawienie wartości produktu w koszyku
+        cart.add(); //dodawanie produktów do koszyka
+        cart.updateWarehouseAddCart(product_name, number); //zaaktualizowanie stanu magazynowego
 
         sqlite3_finalize(stmt);
         sqlite3_close(db);
@@ -724,7 +691,7 @@ int choose_option() {
 }
 
 int main() {
-    int choice = 0, loginSuccessfuly = 0,number;
+    int choice = 0, loginSuccessfuly = 0;
     string password, category_name, product_name, login;
     double price;
     int quantity;
