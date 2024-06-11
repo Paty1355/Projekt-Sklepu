@@ -694,7 +694,7 @@ int main() {
     string password, category_name, product_name, login;
     double price;
     int quantity;
-    char answer;
+    char answer = ' ';
     bool userRunning = false, userOptionRunning = false;
 
     Warehouse warehouse;
@@ -821,13 +821,16 @@ int main() {
             cout << "2. Login" << endl;
             cout << "9. Exit" << endl;
             cin >> choice;
+            while (choice != 1 && choice != 2 && choice != 9) {
+                cout << "Invalid choice. Please select 1, 2 or 9:" << endl;
+                cin >> choice;
+            }
             if (choice == 9) { 
                 choice = 0;
                 userRunning = false;
                 system("cls");
                 continue;
             }
-
             cout << "User login: " << endl;
             cin >> login;
             cout << "User password: " << endl;
@@ -839,8 +842,6 @@ int main() {
             SetConsoleMode(hStdin, mode & (~ENABLE_ECHO_INPUT));
             cin >> password;
             SetConsoleMode(hStdin, mode);
-
-            
                 if (choice == 1) {
                     klient.setValue(login, password);
                     klient.add();
@@ -853,27 +854,37 @@ int main() {
                     userOptionRunning = true;
                     do {
                         if (loginSuccessfuly == 1) {
-                            choice = 0;
                             cout << "1. Check Cart" << endl;
                             cout << "2. Search Product" << endl;
                             cout << "3. Delete Product" << endl;
                             cout << "9. Exit" << endl;
                             cin >> choice;
+                            while (choice != 1 && choice != 2 && choice!=3 && choice != 9) {
+                                cout << "Invalid choice. Please select 1, 2, 3 or 9:" << endl;
+                                cin >> choice;
+                            }
                             if (choice != 9) {
                                 if (choice == 1) {
                                     klient.search();
                                 }
                                 else if (choice == 2) {
                                     warehouse.search();
-                                    choice = 0;
                                     cout << "1. Add Product" << endl;
                                     cout << "9. Exit" << endl;
                                     cin >> choice;
+                                    while (choice != 1 && choice != 9) {
+                                        cout << "Invalid choice. Please select 1 or 9:" << endl;
+                                        cin >> choice;
+                                    }
                                     if (choice == 1) {
                                         klient.addToCart();
                                         choice = 0;
                                         cout << "Are you wanna add more products t/n?" << endl;
                                         cin >> answer;
+                                        while (answer != 't' && answer != 'n') {
+                                            cout << "Invalid choice. Please choose t or n" << endl;
+                                            cin >> answer;
+                                        }
                                         if (answer == 't') {
                                             cout << "How many ?" << endl;
                                             cin >> choice;
@@ -889,15 +900,22 @@ int main() {
                                 }
                                 else if (choice == 3) {
                                     klient.search();
-                                    choice = 0;
                                     cout << "1. Delete Product" << endl;
                                     cout << "9. Exit" << endl;
                                     cin >> choice;
+                                    while (choice != 1 && choice != 9) {
+                                        cout << "Invalid choice. Please select 1 or 9:" << endl;
+                                        cin >> choice;
+                                    }
                                     if (choice == 1) {
                                         klient.deleteFromCart();
-                                        choice = 0;
+                                        cin >> choice;
                                         cout << "Are you wanna add delete more products t/n?" << endl;
                                         cin >> answer;
+                                        while (answer != 't' && answer != 'n') {
+                                            cout << "Invalid choice. Please choose t or n" << endl;
+                                            cin >> answer;
+                                        }
                                         if (answer == 't') {
                                             cout << "How many ?" << endl;
                                             cin >> choice;
