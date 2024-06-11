@@ -296,11 +296,13 @@ class Cart :public Product {
 protected:
     Product product;
 public:
-    Cart() {};
+    Cart(){};
     Cart(const Product& p, int id) : product(p) {};
 
-    void setValue(const Product& p, int id) {
+    void setValueProduct(const Product& p) {
         product = p;
+    }
+    void setCartId(int id) {
         cartId = id;
     }
 
@@ -326,7 +328,7 @@ public:
 
         /* Creating Tables*/
         table_sql = "CREATE TABLE IF NOT EXISTS cart("
-            "id INTEGER PRIMARY KEY,"
+            "id INTEGER,"
             "nameProduct TEXT,"
             "quantityProduct INTEGER,"
             "FOREIGN KEY (nameProduct) REFERENCES warehouse(productName));";
@@ -345,7 +347,7 @@ public:
                 break;
             }
         }*/
-        insert_sql = "INSERT OR IGNORE INTO cart (id,nameProduct, quantityProduct) VALUES (1,'" + product.productName + "', '" + to_string(product.quantity) + "');";
+        insert_sql = "INSERT OR IGNORE INTO cart (id,nameProduct, quantityProduct) VALUES ("+to_string(cartId)+", '" + product.productName + "', '" + to_string(product.quantity) + "');";
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
 
@@ -473,16 +475,16 @@ public:
 
 };
 
-int selectCartId() {
+int checkCartId(string login) {
     sqlite3* db;
     sqlite3_stmt* stmt;
     char* zErrMsg = 0;
     int rc;
     string sqlCartId;
-    int id;
+    int id=0;
 
     rc = sqlite3_open("shop.db", &db);
-    sqlCartId = "SELECT * FROM cart ORDER BY id DESC LIMIT 1;";
+    sqlCartId = "SELECT id FROM client WHERE clientLogin = '" + login + "'LIMIT 1;";
 
     rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -491,7 +493,26 @@ int selectCartId() {
     sqlite3_finalize(stmt);
     sqlite3_close(db);
     return id;
-} //do wywalenia lub do bazy
+}
+int selectNewCartId() {
+    sqlite3* db;
+    sqlite3_stmt* stmt;
+    char* zErrMsg = 0;
+    int rc;
+    string sqlCartId;
+    int id = 0;
+
+    rc = sqlite3_open("shop.db", &db);
+    sqlCartId = "SELECT id FROM client ORDER BY id DESC LIMIT 1;";
+
+    rc = sqlite3_prepare_v2(db, sqlCartId.c_str(), -1, &stmt, nullptr);
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        id = sqlite3_column_int(stmt, 0);
+    }
+    sqlite3_finalize(stmt);
+    sqlite3_close(db);
+    return id + 1;
+}
 
 class Client :public Abstract {
     //int clientId, cartId;
@@ -509,6 +530,7 @@ public:
     }
 
     virtual void add() override {
+        cart.setCartId(selectNewCartId());
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -536,9 +558,8 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-      //  insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword + "'," + to_string(cart.cartId) + ");";
-        insert_sql = "INSERT OR IGNORE INTO client (clientLogin, clientPassword, idCart) VALUES ('" + clientLogin + "' , '" + clientPassword + "', 1);";
-     
+        insert_sql = "INSERT OR IGNORE INTO client (id, clientLogin, clientPassword, idCart) VALUES (" + to_string(cart.cartId) +",'" + clientLogin + "' , '" + clientPassword + "'," + to_string(cart.cartId) + ");";
+
         rc = sqlite3_exec(db, insert_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -584,7 +605,10 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
+        cout << cart.cartId << "cartId" << endl;
+
+       // search_sql = "SELECT nameProduct, quantityProduct FROM cart INNER JOIN client ON cart.id = client.idCart";
+        search_sql = "SELECT nameProduct, quantityProduct FROM cart WHERE id=" + to_string(cart.cartId) + ";";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -616,7 +640,11 @@ public:
         }
         sqlite3_finalize(stmt);
         sqlite3_close(db);
-        if (clientLogin == clientLoginResult) return true;
+        if (clientLogin == clientLoginResult) {
+            cart.setCartId(checkCartId(clientLogin));
+            cout << cart.cartId << "cartId Login" << endl;
+            return true;
+        } 
         return false;
     }
 
@@ -631,8 +659,8 @@ public:
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
         int rc;
-        string sqlQuantity, sqlProductCategory, sqlPrice, sqlId, category, sqlCartTable;
-        int quantity, price;
+        string sqlProductCategory, sqlPrice, sqlId, category, sqlCartTable;
+        int price;
 
         rc = sqlite3_open("shop.db", &db);
 
@@ -641,16 +669,16 @@ public:
         cout << product_name << endl;
 
 
-        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
+      //  sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
         sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
         sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
         sqlCartTable = "CREATE TABLE IF NOT EXISTS cartId("
             "id INTEGER PRIMARY KEY";
 
-        rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
+    /*    rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
             quantity = sqlite3_column_int(stmt, 0);
-        }
+        }*/
 
         rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -662,8 +690,8 @@ public:
             price = sqlite3_column_int(stmt, 0);
         }
 
-        Product product(price, quantity, product_name, category);
-        cart.setValue(product,1); //odczytywanie z bazy CartTable, ogarnij to
+        Product product(price, number, product_name, category);
+        cart.setValueProduct(product); //odczytywanie z bazy CartTable, ogarnij to
         cart.add();
         cart.updateWarehouseAddCart(product_name, number);
 
@@ -689,9 +717,7 @@ int choose_option() {
     cin >> option;
     return option;
 }
-static int idCart = 3;
 
-//Cart cart;
 
 //void deleteFromCart() {
 //    string product_name;
@@ -760,7 +786,7 @@ int main() {
         cout << "3. Exit" << endl;
         cin >> choice;
 
-        while (!(cin >> choice)) {
+      /*  while (!(cin >> choice)) {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
@@ -770,7 +796,7 @@ int main() {
             cout << "Invalid choice. Please select 1, 2 or 3: ";
             cin.clear();
             cin.ignore();
-        }
+        }*/
 
         while (choice < 1 || choice > 3) {
             system("cls");
@@ -890,7 +916,6 @@ int main() {
             if (choice == 1) {
                 klient.setValue(login, password);
                 klient.add();
-                idCart++;
             }
             else if(choice == 2){
                 klient.setValue(login, password);
