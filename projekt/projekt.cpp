@@ -374,7 +374,7 @@ public:
             sqlite3_free(zErrMsg);
         }
         sqlite3_close(db);
-    }
+    } //chyba niepotrzebne
 
     void updateWarehouseAddCart(string product, int number) {
         sqlite3* db;
@@ -580,8 +580,6 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        cout << cart.cartId << "cartId" << endl;
-
         search_sql = "SELECT nameProduct, quantityProduct FROM cart WHERE id=" + to_string(cart.cartId) + ";";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
@@ -616,7 +614,8 @@ public:
         sqlite3_close(db);
         if (clientLogin == clientLoginResult) {
             cart.setCartId(checkCartId(clientLogin));
-            cout << cart.cartId << "cartId Login" << endl;
+            system("cls");
+            cout << "Login Successfuly" << endl;
             return true;
         } 
         return false;
@@ -668,7 +667,7 @@ public:
 
     void deleteFromCart() {
         string product_name;
-        int number;
+        int number=0;
         cout << "Choose product, wchich you wanna delete from the Cart:" << endl;
         cin >> product_name;
         /*cout << "How many: " << endl;
@@ -730,6 +729,7 @@ int main() {
     double price;
     int quantity;
     char answer;
+    bool userRunning = false, userOptionRunning = false;
 
     Warehouse warehouse;
     Client klient;
@@ -738,7 +738,7 @@ int main() {
         cout << "-------------------MENU---------------------" << endl;
         cout << "1. Admin" << endl;
         cout << "2. User" << endl;
-        cout << "3. Exit" << endl;
+        cout << "9. Exit" << endl;
         cin >> choice;
 
       /*  while (!(cin >> choice)) {
@@ -753,14 +753,14 @@ int main() {
             cin.ignore();
         }*/
 
-        while (choice < 1 || choice > 3) {
+        while (choice != 9 && choice != 2 && choice != 1) {
             system("cls");
             cout << "-------------------MENU---------------------" << endl;
             cout << "1. Admin" << endl;
             cout << "2. User" << endl;
-            cout << "3. Exit" << endl;
+            cout << "9. Exit" << endl;
             cin >> choice;
-            if (choice < 1 || choice > 3) cout << "Invalid choice. Please select 1, 2 or 3: " << endl;
+            if (choice != 9 && choice !=2 && choice !=1) cout << "Invalid choice. Please select 1, 2 or 9: " << endl;
             pause_program();
         }
 
@@ -848,13 +848,19 @@ int main() {
             }
         }
         else if (choice == 2) {
-            
+            do {
+            userRunning = true;
             system("cls");
             cout << "1. Register" << endl;
             cout << "2. Login" << endl;
-            cout << "3. Exit" << endl;
+            cout << "9. Exit" << endl;
             cin >> choice;
-            //cart.add();
+            if (choice == 9) { 
+                choice = 0;
+                userRunning = false;
+                system("cls");
+                continue;
+            }
 
             cout << "User login: " << endl;
             cin >> login;
@@ -868,63 +874,98 @@ int main() {
             cin >> password;
             SetConsoleMode(hStdin, mode);
 
-            if (choice == 1) {
-                klient.setValue(login, password);
-                klient.add();
-            }
-            else if(choice == 2){
-                klient.setValue(login, password);
-                loginSuccessfuly = klient.checkData();
-                if (loginSuccessfuly == 1) {
-                    cout << "Login Successfuly" << endl;
-                    choice = 0;
-                    cout << "1. Check Cart" << endl;
-                    cout << "2. Search Product" << endl;
-                    cout << "3. Exit" << endl;
-                    cout << "4. Delete Product" << endl;
-                    cin >> choice;
-                    if (choice == 1) {
-                        klient.search();
-                    }
-                    else if (choice == 2) {
-                        warehouse.search();
-                        choice = 0;
-                        cout << "1. Add Product" << endl;
-                        cout << "3. Exit" << endl;
-                        cin >> choice;
-                        if (choice == 1) {
-                            klient.addToCart();
+            
+                if (choice == 1) {
+                    klient.setValue(login, password);
+                    klient.add();
+                    cout << "Register Successfuly, Login" << endl;
+                    pause_program();
+                }
+                else if (choice == 2) {
+                    klient.setValue(login, password);
+                    loginSuccessfuly = klient.checkData();
+                    userOptionRunning = true;
+                    do {
+                        if (loginSuccessfuly == 1) {
                             choice = 0;
-                            cout << "Are you wanna add more products t/n?" << endl;
-                            cin >> answer;
-                            if (answer == 't') {
-                                cout << "How many ?" << endl;
-                                cin >> choice;
-                                for (int i = 1;i <= choice;i++) {
-                                    klient.addToCart();
+                            cout << "1. Check Cart" << endl;
+                            cout << "2. Search Product" << endl;
+                            cout << "3. Delete Product" << endl;
+                            cout << "9. Exit" << endl;
+                            cin >> choice;
+                            if (choice != 9) {
+                                if (choice == 1) {
+                                    klient.search();
                                 }
-                            }  
+                                else if (choice == 2) {
+                                    warehouse.search();
+                                    choice = 0;
+                                    cout << "1. Add Product" << endl;
+                                    cout << "9. Exit" << endl;
+                                    cin >> choice;
+                                    if (choice == 1) {
+                                        klient.addToCart();
+                                        choice = 0;
+                                        cout << "Are you wanna add more products t/n?" << endl;
+                                        cin >> answer;
+                                        if (answer == 't') {
+                                            cout << "How many ?" << endl;
+                                            cin >> choice;
+                                            for (int i = 1;i <= choice;i++) {
+                                                klient.addToCart();
+                                            }
+                                        }
+                                    }
+                                    else if(choice == 9) {
+                                        choice = 0;
+                                        system("cls");
+                                    }
+                                }
+                                else if (choice == 3) {
+                                    klient.search();
+                                    choice = 0;
+                                    cout << "1. Delete Product" << endl;
+                                    cout << "9. Exit" << endl;
+                                    cin >> choice;
+                                    if (choice == 1) {
+                                        klient.deleteFromCart();
+                                        choice = 0;
+                                        cout << "Are you wanna add delete more products t/n?" << endl;
+                                        cin >> answer;
+                                        if (answer == 't') {
+                                            cout << "How many ?" << endl;
+                                            cin >> choice;
+                                            for (int i = 1;i <= choice;i++) {
+                                                klient.deleteFromCart();
+                                            }
+                                        }
+                                    }
+                                    else if (choice == 9) {
+                                        choice = 0;
+                                        system("cls");
+                                    }
+                                }
+                            }
+                            else {
+                                userOptionRunning = false;
+                            }
                         }
-                    }
-                    else if (choice == 4) {
-                        klient.search();
-                        klient.deleteFromCart();
-                    }
+                    } while (userOptionRunning);
                 }
                 else {
                     cout << "Data incorect" << endl;
                     choice = 0;
-                }
-            }
-
+                    userRunning = false;
+                }  
+            } while (userRunning);
         }
-        else if (choice == 3) {
+        else if (choice == 9) {
             break;
         }
         else {
             continue;
         }
-    } while (choice != 3);
+    } while (choice != 9 && choice != 2 && choice != 1);
     return 0;
 
 }
