@@ -598,8 +598,8 @@ public:
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
         int rc;
-        string sqlProductCategory, sqlPrice, sqlId, category, sqlCartTable;
-        int price=0;
+        string sqlProductCategory, sqlPrice, sqlId, category, sqlQuantity;
+        int price=0, quantity = 0;
 
         rc = sqlite3_open("shop.db", &db);
 
@@ -609,8 +609,8 @@ public:
 
         sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
         sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
-        sqlCartTable = "CREATE TABLE IF NOT EXISTS cartId("
-            "id INTEGER PRIMARY KEY";
+        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product_name + "';";
+
 
         rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr); 
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) { //pobranie danych o produkcie z bazy danych
@@ -621,12 +621,19 @@ public:
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) { //pobranie danych o produkcie z bazy danych
             price = sqlite3_column_int(stmt, 0);
         }
-
-        Product product(price, number, product_name, category); //Utworzenie produktu
-        cart.setValueProduct(product); //ustawienie wartości produktu w koszyku
-        cart.add(); //dodawanie produktów do koszyka
-        cart.updateWarehouseAddCart(product_name, number); //zaaktualizowanie stanu magazynowego
-
+        rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) { //pobranie danych o produkcie z bazy danych
+            quantity = sqlite3_column_int(stmt, 0);
+        }
+        if (number < quantity) {
+            Product product(price, number, product_name, category); //Utworzenie produktu
+            cart.setValueProduct(product); //ustawienie wartości produktu w koszyku
+            cart.add(); //dodawanie produktów do koszyka
+            cart.updateWarehouseAddCart(product_name, number); //zaaktualizowanie stanu magazynowego
+        }
+        else {
+            cout << "Not that many product in warehouse" << endl;
+        }
         sqlite3_finalize(stmt);
         sqlite3_close(db);
     }
@@ -707,18 +714,6 @@ int main() {
         cout << "2. User" << endl;
         cout << "9. Exit" << endl;
         cin >> choice;
-
-    /*    while (!(cin >> choice)) {
-            system("cls");
-            cout << "-------------------MENU---------------------" << endl;
-            cout << "1. Admin" << endl;
-            cout << "2. User" << endl;
-            cout << "9. Exit" << endl;
-            cin >> choice;
-            cout << "Invalid choice. Please select 1, 2 or 9: ";
-            cin.clear();
-            cin.ignore();
-        }*/
 
         while (choice != '9' && choice != '2' && choice != '1') {
             system("cls");
@@ -850,9 +845,12 @@ int main() {
                 else if (choice == '2') {
                     klient.setValue(login, password);
                     loginSuccessfuly = klient.checkData();
-                    userOptionRunning = true;
+                    if (loginSuccessfuly == false) {
+                        choice = '9';
+                    }
                     do {
                         if (loginSuccessfuly == 1) {
+                            userOptionRunning = true;
                             cout << "1. Check Cart" << endl;
                             cout << "2. Search Product" << endl;
                             cout << "3. Delete Product" << endl;
