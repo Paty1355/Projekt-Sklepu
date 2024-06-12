@@ -371,10 +371,8 @@ public:
         sqlite3_finalize(stmt);
 
         if (quantity >= 1) {
-            for (int i = 0;i < 20;i++) {
-                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - number) + " where productName='" + product + "'; ";
-                rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
-            }
+            sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - number) + " where productName='" + product + "'; ";
+            rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
             if (rc != SQLITE_OK) {
                 fprintf(stderr, "SQL error: %s\n", zErrMsg);
                 sqlite3_free(zErrMsg);
@@ -406,20 +404,14 @@ public:
         }
         sqlite3_finalize(stmt);
 
-        if (quantity >= 1) {
-            for (int i = 0;i < 20;i++) {
-                sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity + number) + " where productName=" + product + "; "
-                    "SELECT * from COMPANY";
-                rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
-            }
-            if (rc != SQLITE_OK) {
-                fprintf(stderr, "SQL error: %s\n", zErrMsg);
-                sqlite3_free(zErrMsg);
-            }
+        sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity + number) + " where productName='" + product + "'; ";
+        rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
+        
+        if (rc != SQLITE_OK) {
+            fprintf(stderr, "SQL error: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
         }
-        else {
-            cout << "No products in warehouse" << endl;
-        }
+        
         sqlite3_close(db);
     }
 
@@ -653,7 +645,7 @@ public:
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
         int rc;
-        string sqlProductCategory, sqlPrice, sqlId, category;
+        string sqlProductCategory, sqlPrice, sqlId, category,sqlNumber;
         int quantity=0, price=0;
 
         rc = sqlite3_open("shop.db", &db);
@@ -662,6 +654,7 @@ public:
 
         sqlProductCategory = "SELECT productCategory FROM warehouse WHERE productName ='" + product_name + "';";
         sqlPrice = "SELECT price FROM warehouse WHERE productName ='" + product_name + "';";
+        sqlNumber = "SELECT quantityProduct FROM cart WHERE nameProduct ='" + product_name + "';";
 
         rc = sqlite3_prepare_v2(db, sqlProductCategory.c_str(), -1, &stmt, nullptr);
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -671,6 +664,11 @@ public:
         rc = sqlite3_prepare_v2(db, sqlPrice.c_str(), -1, &stmt, nullptr);
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
             price = sqlite3_column_int(stmt, 0);
+        }
+
+        rc = sqlite3_prepare_v2(db, sqlNumber.c_str(), -1, &stmt, nullptr);
+        while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+            number = sqlite3_column_int(stmt, 0);
         }
 
         Product product(price, number, product_name, category);
@@ -897,9 +895,9 @@ int main() {
                                             cin >> answer;
                                         }
                                         if (answer == 't') {
-                                            cout << "How many ?" << endl;
+                                            cout << "How many products ?" << endl;
                                             cin >> choice;
-                                            for (int i = 1;i <= choice;i++) {
+                                            for (int i = 1;i <= static_cast<int>(choice)-48;i++) {
                                                 klient.addToCart();
                                             }
                                         }
@@ -920,7 +918,6 @@ int main() {
                                     }
                                     if (choice == '1') {
                                         klient.deleteFromCart();
-                                        cin >> choice;
                                         cout << "Are you wanna add delete more products t/n?" << endl;
                                         cin >> answer;
                                         while (answer != 't' && answer != 'n') {
@@ -930,7 +927,7 @@ int main() {
                                         if (answer == 't') {
                                             cout << "How many ?" << endl;
                                             cin >> choice;
-                                            for (int i = 1;i <= int(choice);i++) {
+                                            for (int i = 1;i <= static_cast<int>(choice) - 48;i++) {
                                                 klient.deleteFromCart();
                                             }
                                         }
