@@ -165,7 +165,7 @@ public:
 
         sqlite3_close(db);
 
-        //cout << "Your product has been successfully added!" << endl;
+        cout << "Your product has been successfully added!" << endl;
     }
 
     virtual void remove() override {
@@ -207,7 +207,7 @@ public:
         char* zErrMsg = 0;
         int rc;
         string remove_sql, select_sql;
-        const char* data = "Callback function called"; //zastanow sie nad tym
+        const char* data = "Callback function called";
 
         /* Open database */
         rc = sqlite3_open("shop.db", &db);
@@ -265,6 +265,7 @@ public:
         rc = sqlite3_open("shop.db", &db);
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
+
 
         search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
@@ -690,8 +691,8 @@ char choose_option() {
     cout << "1. Add category and product" << endl;
     cout << "2. Delete product" << endl;
     cout << "3. Check product quantity" << endl;
-    cout << "4. Search products" << endl;
-    cout << "5. Return to main menu" << endl;
+    cout << "4. Show products" << endl; //Search
+    cout << "9. Return to main menu" << endl;
     cin >> option;
     return option;
 }
@@ -703,6 +704,7 @@ int main() {
     double price;
     int quantity;
     char answer = ' ';
+    bool adminRunning = false, adminOptionrunning = false;
     bool userRunning = false, userOptionRunning = false;
 
     Warehouse warehouse;
@@ -721,6 +723,8 @@ int main() {
             choice = '0';
         }
         if (choice == '1') {
+            do {
+                adminRunning = true;
             system("cls");
             cout << "Admin password: " << endl;
 
@@ -735,10 +739,11 @@ int main() {
             if (password == "admin") {
                 cout << "Login successfully" << endl;
 
-                bool admin_running = true;
+                adminOptionrunning = true;
                 do {
+
                     system("cls");
-                    //admin_running = false;
+                    //adminOptionrunning = false;
                     choice = choose_option();
                     switch (choice) {
                     case '1':
@@ -786,20 +791,30 @@ int main() {
                         warehouse.search();
                         pause_program();
                         break;
-                    case '5':
-                        admin_running = false;
+                    case '9':
+                        adminRunning = false;
+                        adminOptionrunning = false;
                         break;
                     default:
                         cout << "Invalid choice. Please select a valid option." << endl;
                         break;
-                       
+
                     }
-                } while (admin_running);
+                } while (adminOptionrunning);
+            }
+            else if (password == "9") {
+                choice = '0';
+                adminOptionrunning = false;
+                adminRunning = false;
+                continue;
             }
             else {
-                cout << "Incorrect password." << endl;
-                choice = '1';
+                cout << "Incorrect password. Try again." << endl;
+                //choice = '1';
+                pause_program();
+                adminRunning = true;
             }
+            } while (adminRunning);
         }
         else if (choice == '2') {
             do {
@@ -846,7 +861,7 @@ int main() {
                         if (loginSuccessfuly == 1) {
                             userOptionRunning = true;
                             cout << "1. Check Cart" << endl;
-                            cout << "2. Search Product" << endl;
+                            cout << "2. Show Product" << endl; //Search
                             cout << "3. Delete Product" << endl;
                             cout << "9. Exit" << endl;
                             cin >> choice;
