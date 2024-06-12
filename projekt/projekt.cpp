@@ -266,8 +266,11 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-
         search_sql = "SELECT quantity FROM warehouse WHERE productName = '" + searched_item + "'";
+        //search_sql = "SELECT quantity FROM warehouse WHERE EXISTS(SELECT 1 FROM warehouse WHERE productName = '" + searched_item + "')";
+
+
+
         rc = sqlite3_exec(db, search_sql.c_str(), callback, 0, &zErrMsg);
 
         if (rc != SQLITE_OK) {
@@ -691,7 +694,7 @@ char choose_option() {
     cout << "1. Add category and product" << endl;
     cout << "2. Delete product" << endl;
     cout << "3. Check product quantity" << endl;
-    cout << "4. Show products" << endl; //Search
+    cout << "4. Search products" << endl; 
     cout << "9. Return to main menu" << endl;
     cin >> option;
     return option;
@@ -794,9 +797,11 @@ int main() {
                     case '9':
                         adminRunning = false;
                         adminOptionrunning = false;
+                        choice = '0';
                         break;
                     default:
                         cout << "Invalid choice. Please select a valid option." << endl;
+                        pause_program();
                         break;
 
                     }
