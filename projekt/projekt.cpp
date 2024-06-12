@@ -93,47 +93,45 @@ public:
     virtual void search() override {}
 };
 
-class Product : public Category {
-    friend class Cart; //
-    friend class Warehouse;
+class Product : public Category { //klasa Produkt, dziedziczy publicznie z Kategorii
+    friend class Cart; //zaprzyjaźniona klasa koszyk
+    friend class Warehouse; //zaprzyjaźniona klasa magazyn
 protected:
     int price;
     int quantity;
     string productName;
 public:
-    Product() {};
-    Product(int priceP, int quantityP, string nameP, string nameC) :
-        price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {} //Category(nameC)
+    Product() {}; //konstruktor domyślny
+    Product(int priceP, int quantityP, string nameP, string nameC) : //konstruktor parametryczny
+        price(priceP), quantity(quantityP), productName(nameP), Category(nameC) {} 
 };
 
-class Warehouse : public Product {
-    friend class Cart;
-    friend class Category;
+class Warehouse : public Product { //klasa Magazyn, dziedziczy publicznie z klasy Produkt
+    friend class Cart; //zaprzyjaźniona klasa koszyk
+    friend class Category; //zaprzyjaźniona klasa kategoria
 protected:
-    Product product;
+    Product product; //obiekt produkt
 public:
-   
+    Warehouse() {}; //konstruktor domyślny
+    Warehouse(const Product& p) : product(p) {}; //konstruktor parametryczny
 
-    Warehouse(const Product& p) : product(p) {};
-    Warehouse() {};
-
-    void set(const Product& p) {
+    void set(const Product& p) { //setter 
         product = p;
     }
 
-    virtual void add() override {
+    virtual void add() override { //Metoda przeciążona - dodawanie rekordów do bazy danych
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
         string table_sql, insert_sql;
         const char* data = "Callback function called";
 
-        /* Open database */
+        
         rc = sqlite3_open("shop.db", &db);
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        /* Creating Tables*/
+        
         table_sql = "CREATE TABLE IF NOT EXISTS warehouse("
             "id INTEGER PRIMARY KEY,"
             "productName TEXT NOT NULL UNIQUE,"
@@ -157,10 +155,8 @@ public:
             sqlite3_free(zErrMsg);
         }
 
-        /* Create SQL statement */
         string select_sql = "SELECT * FROM warehouse";
 
-        /* Execute SQL statement */
         rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
 
         sqlite3_close(db);
@@ -168,41 +164,9 @@ public:
         cout << "Your product has been successfully added!" << endl;
     }
 
-    virtual void remove() override {
-        sqlite3* db;
-        char* zErrMsg = 0;
-        int rc;
-        string remove_sql, select_sql;
-        const char* data = "Callback function called"; //zastanow sie nad tym
+    virtual void remove() override {} 
 
-        /* Open database */
-        rc = sqlite3_open("shop.db", &db);
-
-        if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
-
-        /* Creating Tables*/
-        remove_sql = "DELETE FROM warehouse "
-            "WHERE productName='" + product.productName + "' ";
-
-        rc = sqlite3_exec(db, remove_sql.c_str(), callback, 0, &zErrMsg);
-
-        if (rc != SQLITE_OK) {
-            fprintf(stderr, "SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-        }
-        /* Create SQL statement */
-        select_sql = "SELECT * FROM warehouse";
-
-        /* Execute SQL statement */
-        rc = sqlite3_exec(db, select_sql.c_str(), callback, (void*)data, &zErrMsg);
-        sqlite3_close(db);
-
-        cout << "Your product has been successfully removed!" << endl;
-    }
-
-
-
-    void removeP(string product) {
+    void removeP(string product) { //usuwanie rekordów z bazy danych poprzez przekazanie parametru
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -234,7 +198,7 @@ public:
         cout << "Your product has been successfully removed!" << endl;
     }
 
-    virtual void search() override {
+    virtual void search() override { //Metoda przeciążona - wyświetlanie rekordów z bazy danych
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -255,7 +219,7 @@ public:
         sqlite3_close(db);
     }
 
-    void checkQuantity(string searched_item) {
+    void checkQuantity(string searched_item) { //sprawdzanie ilości produktu
         sqlite3* db;
         char* zErrMsg = 0;
         int rc;
@@ -386,7 +350,7 @@ public:
         sqlite3_close(db);
     }
 
-    void updateWarehouseDeleteCart(string product, int number) {
+    void updateWarehouseDeleteCart(string product, int number) { //aktualizacja magazynu oraz usunięcie danych z koszyka
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -685,22 +649,23 @@ public:
 
 void pause_program() {
     cout << "Press ENTER to continue...";
-    cin.ignore(); //ignores any input
-    cin.get(); //wait for enter key
+    cin.ignore(); //ignoruje dane wejściowe
+    cin.get(); //czeka na enter
 }
 
-char choose_option() {
+char choose_option() { //wybieranie opcji
     char option;
     cout << "1. Add category and product" << endl;
     cout << "2. Delete product" << endl;
     cout << "3. Check product quantity" << endl;
-    cout << "4. Search products" << endl; 
+    cout << "4. Show products" << endl; 
     cout << "9. Return to main menu" << endl;
     cin >> option;
     return option;
 }
 
 int main() {
+    //potrzebne zmienne do wyświetlania projektu
     int loginSuccessfuly = 0;
     char choice = '0';
     string password, category_name, product_name, login;
@@ -713,6 +678,7 @@ int main() {
     Warehouse warehouse;
     Client klient;
 
+    //Główna pętla
     do {
         cout << "-------------------MENU---------------------" << endl;
         cout << "1. Admin" << endl;
@@ -731,7 +697,7 @@ int main() {
             system("cls");
             cout << "Admin password: " << endl;
 
-            // Hide password input
+            // Ukrywa dane wejściowe hasła
             HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
             DWORD mode = 0;
             GetConsoleMode(hStdin, &mode);
@@ -746,7 +712,6 @@ int main() {
                 do {
 
                     system("cls");
-                    //adminOptionrunning = false;
                     choice = choose_option();
                     switch (choice) {
                     case '1':
@@ -779,8 +744,6 @@ int main() {
                     case '2':
                         cout << "Enter the name of the product that you want to delete:" << endl;
                         cin >> product_name;
-                        //Product product1(price, quantity, product_name, category_name);
-                        //warehouse.set(product1);
                         warehouse.removeP(product_name);
                         pause_program();
                         break;
@@ -815,7 +778,6 @@ int main() {
             }
             else {
                 cout << "Incorrect password. Try again." << endl;
-                //choice = '1';
                 pause_program();
                 adminRunning = true;
             }
@@ -843,7 +805,7 @@ int main() {
             cin >> login;
             cout << "User password: " << endl;
 
-            // Hide password input
+            // Ukrywa dane wejściowe hasła
             HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
             DWORD mode = 0;
             GetConsoleMode(hStdin, &mode);
@@ -866,7 +828,7 @@ int main() {
                         if (loginSuccessfuly == 1) {
                             userOptionRunning = true;
                             cout << "1. Check Cart" << endl;
-                            cout << "2. Show Product" << endl; //Search
+                            cout << "2. Search Product" << endl; 
                             cout << "3. Delete Product" << endl;
                             cout << "9. Exit" << endl;
                             cin >> choice;
