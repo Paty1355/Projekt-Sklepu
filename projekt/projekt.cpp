@@ -639,8 +639,6 @@ public:
         int number=0;
         cout << "Choose product, wchich you wanna delete from the Cart:" << endl;
         cin >> product_name;
-        /*cout << "How many: " << endl;
-        cin >> number;*/
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
