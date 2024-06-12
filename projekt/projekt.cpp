@@ -714,18 +714,12 @@ int main() {
         cout << "2. User" << endl;
         cout << "9. Exit" << endl;
         cin >> choice;
-
-        while (choice != '9' && choice != '2' && choice != '1') {
+        if (choice != '9' && choice != '2' && choice != '1') {
             system("cls");
-            cout << "-------------------MENU---------------------" << endl;
-            cout << "1. Admin" << endl;
-            cout << "2. User" << endl;
-            cout << "9. Exit" << endl;
-            cin >> choice;
-            if (choice != '9' && choice !='2' && choice !='1') cout << "Invalid choice. Please select 1, 2 or 9: " << endl;
+            cout << "Invalid choice. Please select 1, 2 or 9: " << endl;
             pause_program();
+            choice = '0';
         }
-
         if (choice == '1') {
             system("cls");
             cout << "Admin password: " << endl;
