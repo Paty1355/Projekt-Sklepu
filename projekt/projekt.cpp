@@ -350,7 +350,7 @@ public:
 
     virtual void search() override {}
 
-    void updateWarehouseAddCart(string product, int number) { //Funkcja aktualizująca stan magazynu
+    void updateWarehouseAddCart() { //Funkcja aktualizująca stan magazynu
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -362,7 +362,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product + "';";
+        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product.productName + "';";
         rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr); //Przygotowanie zapytania
 
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -371,7 +371,7 @@ public:
         sqlite3_finalize(stmt);
 
         if (quantity >= 1) {
-            sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - number) + " where productName='" + product + "'; ";
+            sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity - product.quantity) + " where productName='" + product.productName + "'; ";
             rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
             if (rc != SQLITE_OK) {
                 fprintf(stderr, "SQL error: %s\n", zErrMsg);
@@ -384,7 +384,7 @@ public:
         sqlite3_close(db);
     }
 
-    void updateWarehouseDeleteCart(string product, int number) {
+    void updateWarehouseDeleteCart() {
         sqlite3* db;
         sqlite3_stmt* stmt;
         char* zErrMsg = 0;
@@ -396,7 +396,7 @@ public:
 
         if (rc) fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
 
-        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product + "';";
+        sqlQuantity = "SELECT quantity FROM warehouse WHERE productName ='" + product.productName + "';";
         rc = sqlite3_prepare_v2(db, sqlQuantity.c_str(), -1, &stmt, nullptr);
 
         while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
@@ -404,7 +404,7 @@ public:
         }
         sqlite3_finalize(stmt);
 
-        sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity + number) + " where productName='" + product + "'; ";
+        sqlUpdate = "UPDATE warehouse set quantity = " + to_string(quantity + product.quantity) + " where productName='" + product.productName + "'; ";
         rc = sqlite3_exec(db, sqlUpdate.c_str(), callback, 0, &zErrMsg);
         
         if (rc != SQLITE_OK) {
@@ -625,7 +625,7 @@ public:
             Product product(price, number, product_name, category); //Utworzenie produktu
             cart.setValueProduct(product); //ustawienie wartości produktu w koszyku
             cart.add(); //dodawanie produktów do koszyka
-            cart.updateWarehouseAddCart(product_name, number); //zaaktualizowanie stanu magazynowego
+            cart.updateWarehouseAddCart(); //zaaktualizowanie stanu magazynowego
         }
         else {
             cout << "Not that many product in warehouse" << endl;
@@ -672,7 +672,7 @@ public:
         Product product(price, number, product_name, category);
         cart.setValueProduct(product);
         cart.remove();
-        cart.updateWarehouseDeleteCart(product_name, number);
+        cart.updateWarehouseDeleteCart();
         
         sqlite3_finalize(stmt);
         sqlite3_close(db);
