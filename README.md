@@ -1,4 +1,4 @@
-# Project: Object-Oriented Shop System in C++ with SQLite Database
+# Object-Oriented Shop System in C++ with SQLite Database
 
 ## Overview
 
